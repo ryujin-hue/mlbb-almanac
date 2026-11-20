@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+*.tsbuildinfo
+.DS_Store
+
+# Hasil build web (dibuat ulang oleh `npm run build` di web/).
+# Dataset fallback yang di-commit ada di web/public/dataset/.
+/site/
+
+# Screenshot lokal untuk review UI (bukan aset repo)
+.tmp-shots/
+
+# State lokal wrangler
+.wrangler/
+
+# Bundle/Pages Functions yang dijana wrangler (build artifact)
+pages/_worker.bundle
+pages/.wrangler/
