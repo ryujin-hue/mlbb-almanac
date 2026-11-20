@@ -1,13 +1,13 @@
 {
-  "name": "MLBB Meta Center",
-  "short_name": "MLBB Meta",
-  "description": "Win rate, pick rate, ban rate, tier list, dan meta movers untuk Mobile Legends: Bang Bang.",
+  "name": "MLBB Almanac",
+  "short_name": "Almanac",
+  "description": "Win rate, pick rate, ban rate, tier list dan meta movers Mobile Legends: Bang Bang, beside ten years of patch and balance history.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b0e13",
-  "theme_color": "#0b0e13",
+  "background_color": "#0B0F1A",
+  "theme_color": "#0B0F1A",
   "lang": "id-ID",
   "categories": ["games", "reference"],
   "icons": [

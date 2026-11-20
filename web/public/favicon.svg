@@ -1,5 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MLBB Meta Center">
-  <rect width="64" height="64" rx="12" fill="#0b0e13"/>
-  <path d="M14 46 L32 14 L50 46 Z" fill="none" stroke="#d8a838" stroke-width="5" stroke-linejoin="round"/>
-  <circle cx="32" cy="38" r="5" fill="#3fb8a0"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="MLBB Almanac">
+  <title>MLBB Almanac</title>
+  <rect width="32" height="32" rx="7" fill="#0B0F1A"/>
+  <rect x="2.67" y="4.0" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="12.0" y="4.0" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="21.33" y="4.0" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="2.67" y="10.67" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="12.0" y="10.67" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="21.33" y="10.67" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="2.67" y="17.33" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="12.0" y="17.33" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="21.33" y="17.33" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="2.67" y="24.0" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="12.0" y="24.0" width="8.0" height="3.33" fill="#2F3C57"/>
+  <rect x="21.33" y="24.0" width="8.0" height="3.33" fill="#00E5FF"/>
 </svg>

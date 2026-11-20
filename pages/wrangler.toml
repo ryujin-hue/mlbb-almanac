@@ -1,0 +1,8 @@
+# Projek Cloudflare Pages untuk MLBB Almanac (bahagian statik + proxy API).
+#
+# `pages_build_output_dir` arahkan ke `site/` yang dijana oleh `web/` build.
+# Worker (KV + cron + API) kekal di repo root — Pages hanya memproksikan
+# /api/* dan /audio/* ke sana.
+name = "mlbb-almanac"
+pages_build_output_dir = "../site"
+compatibility_date = "2026-10-22"

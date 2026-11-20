@@ -1,4 +1,4 @@
-/* Meta Center v3 - mobile-first, dark theme.
+/* MLBB Almanac - mobile-first, dark theme.
    Palet tetap mengikuti situs v1 supaya produknya terasa satu,
    tapi layout-nya dibangun ulang: grid hero jadi konten utama (bukan
    ringkasan), tidak ada lagi scroll di dalam scroll, dan filter pindah
@@ -11,31 +11,33 @@
 */
 
 :root {
-  --bg: #0b0e13;
-  --bg-sunken: #080a0f;
-  --panel: #12171f;
-  --panel-2: #171d27;
-  --panel-3: #1c232e;
-  --line: #232c38;
-  --line-strong: #303b4a;
+  --bg: #0B0F1A;
+  --bg-sunken: #070A12;
+  --panel: #111726;
+  --panel-2: #1A2236;
+  --panel-3: #1F2839;
+  --line: #222C42;
+  --line-strong: #2F3C57;
 
-  --ink: #e8ecf2;
-  --ink-2: #a7b1c0;
-  --ink-3: #7b8494;
-  --ink-4: #616b7a;
+  --ink: #EEF3FA;
+  --ink-2: #C7D0E0;
+  --ink-3: #8A97B0;
+  --ink-4: #6B7689;
 
-  --gold: #d8a838;
-  --gold-dim: #8a6c24;
-  --adv: #3fb8a0;
-  --thr: #d2584e;
-  --info: #5b8dd6;
-  --up: #2fd37b;
+  --cyan: #00E5FF;
+  --cyan-dim: #0092A8;
+  --gold: #F5C518;
+  --gold-dim: #8A6F10;
+  --adv: #3DDC97;
+  --thr: #FF5C6C;
+  --info: #5B8DD6;
+  --up: #3DDC97;
 
-  --tier-sp: #e8b93f;
-  --tier-s: #dd8c3c;
-  --tier-a: #3fb8a0;
-  --tier-b: #5b8dd6;
-  --tier-c: #7b8494;
+  --tier-sp: #E8B93F;
+  --tier-s: #DD8C3C;
+  --tier-a: #3DDC97;
+  --tier-b: #5B8DD6;
+  --tier-c: #7B8494;
 
   --r-card: 12px;
   --r-sm: 8px;
@@ -98,9 +100,10 @@ h3 { font-size: .92rem; }
   border-bottom: 1px solid var(--line);
 }
 
-.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--ink); }
-.brand__mark { width: 9px; height: 9px; border-radius: 2px; background: var(--gold); flex: none; }
-.brand__thin { color: var(--ink-3); font-weight: 500; }
+.brand { display: flex; align-items: center; gap: 9px; color: var(--ink); }
+.brand__mark { flex: none; display: block; }
+.brand__prefix { color: var(--ink-3); font-weight: 500; letter-spacing: .16em; font-size: .74em; }
+.brand__name { color: var(--ink); font-weight: 700; letter-spacing: .012em; }
 
 .topbar__meta {
   margin-left: auto;
@@ -118,7 +121,7 @@ h3 { font-size: .92rem; }
   white-space: nowrap;
 }
 
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--adv); flex: none; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); flex: none; }
 .dot--stale { background: var(--gold); }
 .dot--error { background: var(--thr); }
 
@@ -292,7 +295,7 @@ h3 { font-size: .92rem; }
 .badge--tier[data-tier='S'] { background: var(--tier-s); color: #16120a; }
 .badge--tier[data-tier='A'] { background: var(--tier-a); color: #06120e; }
 .badge--tier[data-tier='B'] { background: var(--tier-b); color: #060d18; }
-.badge--tier[data-tier='C'] { background: var(--tier-c); color: #0b0e13; }
+.badge--tier[data-tier='C'] { background: var(--tier-c); color: #0B0F1A; }
 
 .trend { font-size: .66rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .trend--up { color: var(--up); }

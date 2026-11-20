@@ -27,6 +27,36 @@ import {
 } from './data/store';
 import { formatDateTime, formatRelative } from './lib/format';
 
+/**
+ * Mark "the almanac table" — 12 sel (3 kolom x 4 baris), satu sel menyala:
+ * entri terakhir dalam urutan baca = entri terkini (live).
+ * Grid 24 unit: kolom x = 2, 9, 16; baris y = 3, 8, 13, 18; sel 6 x 2.5u.
+ */
+const ALMANAC_CELLS: ReadonlyArray<readonly [number, number]> = [
+  [2, 3], [9, 3], [16, 3],
+  [2, 8], [9, 8], [16, 8],
+  [2, 13], [9, 13], [16, 13],
+  [2, 18], [9, 18],
+];
+
+function BrandMark({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      className="brand__mark"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {ALMANAC_CELLS.map(([x, y]) => (
+        <rect key={`${x}-${y}`} x={x} y={y} width="6" height="2.5" fill="var(--line-strong)" />
+      ))}
+      <rect x="16" y="18" width="6" height="2.5" fill="var(--cyan)" />
+    </svg>
+  );
+}
+
 const TABS: { id: View; label: string; icon: string }[] = [
   { id: 'heroes', label: 'Hero', icon: '◆' },
   { id: 'composition', label: 'Tim', icon: '⊞' },
@@ -176,8 +206,9 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <span className="brand">
-          <span className="brand__mark" aria-hidden="true" />
-          MLBB<span className="brand__thin">MetaCenter</span>
+          <BrandMark />
+          <span className="brand__prefix">MLBB</span>
+          <span className="brand__name">ALMANAC</span>
         </span>
         <div className="topbar__meta">
           <span

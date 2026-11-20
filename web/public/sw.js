@@ -1,5 +1,5 @@
 /**
- * Service worker Meta Center.
+ * Service worker MLBB Almanac.
  *
  * Strategi:
  *   - navigasi (HTML): network-first, fallback ke cache lalu ke snapshot offline.
@@ -7,7 +7,7 @@
  *   - /api/heroes + /api/deltas: stale-while-revalidate, dan hasilnya
  *     dicache supaya aplikasi tetap punya data saat offline.
  */
-const VERSION = 'mlbb-meta-v3';
+const VERSION = 'mlbb-almanac-v1';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 
