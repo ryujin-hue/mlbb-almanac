@@ -1,0 +1,77 @@
+{
+  "endpoint": "/api/v1/reference/lanes",
+  "data": [
+    {
+      "lane": "Mid Lane",
+      "hero_count": "24",
+      "description": ""
+    },
+    {
+      "lane": "Roam",
+      "hero_count": "22",
+      "description": ""
+    },
+    {
+      "lane": "Exp Lane",
+      "hero_count": "20",
+      "description": ""
+    },
+    {
+      "lane": "Gold Lane",
+      "hero_count": "19",
+      "description": ""
+    },
+    {
+      "lane": "Jungle",
+      "hero_count": "16",
+      "description": ""
+    },
+    {
+      "lane": "Jungle/Exp Lane",
+      "hero_count": "7",
+      "description": ""
+    },
+    {
+      "lane": "Exp Lane/Jungle",
+      "hero_count": "6",
+      "description": ""
+    },
+    {
+      "lane": "Roam/Exp Lane",
+      "hero_count": "5",
+      "description": ""
+    },
+    {
+      "lane": "Exp Lane/Roam",
+      "hero_count": "4",
+      "description": ""
+    },
+    {
+      "lane": "Jungle/Roam",
+      "hero_count": "4",
+      "description": ""
+    },
+    {
+      "lane": "Mid Lane/Roam",
+      "hero_count": "2",
+      "description": ""
+    },
+    {
+      "lane": "Jungle/Mid Lane",
+      "hero_count": "2",
+      "description": ""
+    },
+    {
+      "lane": "Jungle/Gold Lane",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "lane": "Mid Lane/Gold Lane",
+      "hero_count": "1",
+      "description": ""
+    }
+  ],
+  "count": 14,
+  "total": 14
+}

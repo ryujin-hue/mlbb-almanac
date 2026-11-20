@@ -1,0 +1,127 @@
+{
+  "endpoint": "/api/v1/reference/roles",
+  "data": [
+    {
+      "role": "fighter",
+      "hero_count": "25",
+      "description": ""
+    },
+    {
+      "role": "mage",
+      "hero_count": "24",
+      "description": ""
+    },
+    {
+      "role": "marksman",
+      "hero_count": "18",
+      "description": ""
+    },
+    {
+      "role": "assassin",
+      "hero_count": "14",
+      "description": ""
+    },
+    {
+      "role": "tank",
+      "hero_count": "10",
+      "description": ""
+    },
+    {
+      "role": "support",
+      "hero_count": "7",
+      "description": ""
+    },
+    {
+      "role": "fighter/assassin",
+      "hero_count": "6",
+      "description": ""
+    },
+    {
+      "role": "fighter/tank",
+      "hero_count": "4",
+      "description": ""
+    },
+    {
+      "role": "assassin/fighter",
+      "hero_count": "3",
+      "description": ""
+    },
+    {
+      "role": "support/tank",
+      "hero_count": "3",
+      "description": ""
+    },
+    {
+      "role": "tank/fighter",
+      "hero_count": "3",
+      "description": ""
+    },
+    {
+      "role": "tank/mage",
+      "hero_count": "2",
+      "description": ""
+    },
+    {
+      "role": "assassin/mage",
+      "hero_count": "2",
+      "description": ""
+    },
+    {
+      "role": "tank/support",
+      "hero_count": "2",
+      "description": ""
+    },
+    {
+      "role": "support/fighter",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "tank/marksman",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "support/assassin",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "support/mage",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "mage/assassin",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "marksman/mage",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "marksman/assassin",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "fighter/marksman",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "assassin/marksman",
+      "hero_count": "1",
+      "description": ""
+    },
+    {
+      "role": "fighter/mage",
+      "hero_count": "1",
+      "description": ""
+    }
+  ],
+  "count": 24,
+  "total": 24
+}

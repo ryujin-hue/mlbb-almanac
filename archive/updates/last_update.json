@@ -1,0 +1,24 @@
+{
+  "run_at": "2026-11-20 19:28 (+08)",
+  "applied": false,
+  "sources_checked": {
+    "heroes": "https://mlbbhub.com/heroes",
+    "patches": "https://mlbbhub.com/patch-notes",
+    "items": "https://mlbbhub.com/items",
+    "spells": "https://mlbbhub.com/spells",
+    "season": "https://mlbbhub.com/server-time/season-schedule"
+  },
+  "detected_new": {
+    "patches": [],
+    "heroes": [],
+    "items": [],
+    "spells": []
+  },
+  "season_status": {
+    "season": 42,
+    "end_date": "2026-DEC-16",
+    "latest_patch": "2.2.23 (2026-11-11)"
+  },
+  "static_api_rebuilt": false,
+  "rows_appended": 0
+}
