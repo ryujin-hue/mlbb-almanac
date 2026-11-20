@@ -84,7 +84,7 @@ jobs:
           pip install playwright
           python3 -m playwright install --with-deps chromium
 
-      - name: Smoke test Meta Center v2
+      - name: Smoke test MLBB Almanac
         run: python3 tests/smoke_test_v2.py
 
       # --- keamanan ---

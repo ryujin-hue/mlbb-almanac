@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test Meta Center v2 di browser sungguhan.
+"""Smoke test MLBB Almanac di browser sungguhan.
 
 Menjalankan build `site/` lewat mock Worker API (`tools/dev-server.mjs`),
 lalu memeriksa:
@@ -110,7 +110,12 @@ def main() -> int:
             ck("landing status 200", resp is not None and resp.status == 200)
             ck("tanpa console error", not errors, str(errors[:2]))
 
-            ck("judul aplikasi tampil", "MetaCenter" in page.title() or "Meta Center" in page.title())
+            # Tajuk aplikasi ikut rebrand ke "MLBB Almanac".
+            ck(
+                "judul aplikasi tampil",
+                "MLBB Almanac" in page.title() or "Meta Center" in page.title(),
+                page.title(),
+            )
             ck("strip Ringkasan Patch tampil", "Ringkasan Patch" in body)
             ck("label 'Rata-rata Win Rate' tampil", "rata-rata win rate" in low)
             ck("nilai avg win rate tampil (bukan —)", "50,0%" in body, body[:0])

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cek cepat situs produksi MLBB Meta Center.
+"""Cek cepat situs produksi MLBB Almanac.
 
 Menjalankan Chromium terhadap URL produksi (bukan dev server) untuk memastikan
 deploy terakhir benar-benar hidup: rate terisi, filter rank bekerja, tab

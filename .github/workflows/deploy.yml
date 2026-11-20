@@ -1,6 +1,6 @@
 name: Deploy Worker + Site
 
-# Deploy aplikasi Meta Center (worker API + aset statik) ke Cloudflare Workers.
+# Deploy aplikasi MLBB Almanac (worker API + aset statik) ke Cloudflare Workers.
 #
 # Token dijangka sebagai secret repository:
 #   CLOUDFLARE_API_TOKEN  - API token Cloudflare (Workers Scripts:Edit, Workers KV Storage:Edit)
