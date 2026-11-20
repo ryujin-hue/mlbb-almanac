@@ -167,7 +167,25 @@ def main() -> int:
             bool(all_nums) and bool(myth_nums) and all_nums != myth_nums,
             f"all={all_nums} mythic={myth_nums}",
         )
-        ck("ringkasan ikut bracket", all_avg != myth_avg, f"{all_avg!r} -> {myth_avg!r}")
+        # Ringkasan ikut bracket: bandingkan nilai API (presisi penuh), bukan
+        # string yang sudah dipulatkan ke 1 desimal. Dua bracket boleh punya
+        # rata-rata hampir sama (mis. 49.954 vs 50.035) dan kedua-duanya
+        # dipaparkan "50,0%" - jadi membanding string paparan jadi salah
+        # nondeterministik. Nilai sebenar tetap scoped dengan betul.
+        def api_avg(rank: str) -> float | None:
+            data = get_json(f"{BASE}/api/heroes?rank={rank}")
+            rates = [h["win_rate"] for h in (data.get("heroes") or [])
+                     if h.get("win_rate") is not None]
+            return sum(rates) / len(rates) if rates else None
+
+        scoped_all, scoped_mythic = api_avg("all"), api_avg("mythic")
+        ck(
+            "ringkasan ikut bracket",
+            scoped_all is not None
+            and scoped_mythic is not None
+            and abs(scoped_all - scoped_mythic) > 0.01,
+            f"all={scoped_all} mythic={scoped_mythic} (paparan: {all_avg!r} -> {myth_avg!r})",
+        )
         ck("ganti rank tanpa request baru", len(hits) == 0, f"{len(hits)} request")
 
         # Tab movers & data.

@@ -207,10 +207,29 @@ def main() -> int:
                 bool(all_numbers) and bool(myth_numbers) and all_numbers != myth_numbers,
                 f"all={all_numbers} mythic={myth_numbers}",
             )
+            # Bandingkan nilai sebenar, bukan string paparan 1 desimal —
+            # dua bracket boleh pembulatkan kepada "50,0%" walaupun scoped
+            # dengan betul (49.954 vs 50.035).
+            def scoped_avg(rank: str) -> float | None:
+                import json
+                import urllib.request
+
+                with urllib.request.urlopen(
+                    f"{BASE}/api/heroes?rank={rank}", timeout=30
+                ) as resp:
+                    data = json.loads(resp.read())
+                rates = [h["win_rate"] for h in (data.get("heroes") or [])
+                         if h.get("win_rate") is not None]
+                return sum(rates) / len(rates) if rates else None
+
+            scoped_all, scoped_mythic = scoped_avg("all"), scoped_avg("mythic")
             ck(
                 "ringkasan ikut mengikuti bracket rank",
-                bool(all_avg) and bool(myth_avg) and all_avg != myth_avg,
-                f"all={all_avg!r} mythic={myth_avg!r}",
+                scoped_all is not None
+                and scoped_mythic is not None
+                and abs(scoped_all - scoped_mythic) > 0.01,
+                f"all={scoped_all} mythic={scoped_mythic} "
+                f"(paparan: {all_avg!r} -> {myth_avg!r})",
             )
             ck(
                 "ganti rank tidak memicu request /api/heroes baru",
