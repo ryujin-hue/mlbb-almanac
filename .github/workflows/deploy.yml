@@ -24,7 +24,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-production
+  # Sama dengan deploy-pages: API Cloudflare rate-limit (code 10429) bila
+  # dua deploy Cloudflare jalan serentak.
+  group: cloudflare-deploy
   cancel-in-progress: false
 
 jobs:

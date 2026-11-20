@@ -14,3 +14,7 @@ node_modules/
 
 # State lokal wrangler
 .wrangler/
+
+# Bundle/Pages Functions yang dijana wrangler (build artifact)
+pages/_worker.bundle
+pages/.wrangler/
