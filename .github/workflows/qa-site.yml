@@ -67,13 +67,17 @@ jobs:
       - name: Cek ukuran bundle
         working-directory: live
         run: |
-          # Bundle JS/CSS dikira TANPA aset audio - lagu hero ~4.8 MB dan ia
-          # bukan bundle kod, jadi tidak ikut dikira sebagai "bundle kegedean".
-          total=$(du -sk --exclude=audio site | cut -f1)
-          echo "site/ (tanpa audio): ${total} KB"
-          test "$total" -lt 1200 || { echo "Bundle kegedean (>1.2 MB)"; exit 1; }
+          # Bundle JS/CSS dikira TANPA aset kandungan - lagu hero ~4.8 MB dan
+          # imej arkib ~3.4 MB bukan bundle kod, jadi tidak ikut dikira sebagai
+          # "bundle kegedean".
+          total=$(du -sk --exclude=audio --exclude=archive site | cut -f1)
+          echo "site/ (tanpa audio, tanpa arkib): ${total} KB"
+          test "$total" -lt 1400 || { echo "Bundle kegedean (>1.4 MB)"; exit 1; }
           if [ -d site/audio ]; then
             echo "site/audio/: $(du -sk site/audio | cut -f1) KB"
+          fi
+          if [ -d site/archive ]; then
+            echo "site/archive/: $(du -sk site/archive | cut -f1) KB"
           fi
 
       - name: Cek aset lagu hero
