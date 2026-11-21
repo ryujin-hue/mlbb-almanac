@@ -13,6 +13,6 @@
   },
   "include": [
     "src/**/*.ts",
-    "../shared/**/*.ts"
+    "../../packages/shared/**/*.ts"
   ]
 }

@@ -402,13 +402,53 @@ def main() -> int:
             ck("tab movers terbuka", "meta movers" in body)
             ck("movers menjelaskan ketiadaan riwayat", "riwayat snapshot" in body)
 
+            # ------------------------------------------------ tab patch
+            page.goto(BASE + "/#/patches", wait_until="domcontentloaded", timeout=30000)
+            page.wait_for_timeout(2000)
+            body = page.inner_text("body").lower()
+            ck("tab patch terbuka", "riwayat patch" in body)
+            patch_rows = page.query_selector_all(".pitem")
+            ck("tab patch senarai versi patch", len(patch_rows) >= 80, f"{len(patch_rows)} patch")
+            # Buka patch pertama yang ada nota hero.
+            for head in page.query_selector_all(".pitem__head"):
+                if "hero" in head.inner_text():
+                    head.click()
+                    break
+            page.wait_for_timeout(900)
+            changes = page.query_selector_all(".chg__row")
+            ck("tab patch membuka nota perubahan", len(changes) > 0, f"{len(changes)} nota")
+            ck("tab patch ada jenis perubahan", len(page.query_selector_all(".chg__type")) > 0)
+
+            # ------------------------------------------------ tab item
+            page.goto(BASE + "/#/items", wait_until="domcontentloaded", timeout=30000)
+            page.wait_for_timeout(2000)
+            body = page.inner_text("body").lower()
+            ck("tab item terbuka", "katalog item" in body)
+            item_rows = page.query_selector_all(".icard")
+            ck("tab item senarai item", len(item_rows) >= 100, f"{len(item_rows)} item")
+            ck("tab item ada imej", len(page.query_selector_all(".icard__img img")) > 0)
+
+            # ------------------------------------------- kad hero + modal
+            page.goto(BASE + "/#/heroes", wait_until="domcontentloaded", timeout=30000)
+            page.wait_for_timeout(2000)
+            ck("kad hero ada strip arkib", len(page.query_selector_all(".hcard__arch")) > 0)
+            card = page.query_selector(".hcard:has(.hcard__arch)")
+            if card:
+                card.query_selector(".hcard__name button").click()
+                page.wait_for_timeout(1800)
+                ck("modal ada seksyen riwayat patch", len(page.query_selector_all(".chg--boxed")) > 0)
+                ck("modal ada rekod arkib", len(page.query_selector_all(".kv > div")) > 0)
+
             # ------------------------------------------------ tab data
             page.goto(BASE + "/#/sources", wait_until="domcontentloaded", timeout=30000)
-            page.wait_for_timeout(1800)
+            page.wait_for_timeout(2200)
             body = page.inner_text("body").lower()
             ck("tab data terbuka", "status data" in body)
             ck("tab data menampilkan sumber", "sumber" in body)
             ck("tab data menampilkan versi snapshot", "riwayat snapshot" in body)
+            ck("tab data ada panel arkib", "arkib sejarah patch" in body)
+            ck("tab data ada jadual rujukan", len(page.query_selector_all(".ref .tbl tbody tr")) > 0)
+            ck("tab data ada senarai dokumen", len(page.query_selector_all(".doclist__item")) >= 5)
 
             # ------------------------------------------------ PWA
             manifest = page.request.get(BASE + "/manifest.webmanifest")

@@ -4,6 +4,8 @@ name: auto-update
 # mlbbhub.com and appends them to the CSV datasets, then refreshes the static
 # API mirror and commits. Runs at 02:00 Asia/Kuala_Lumpur (18:00 UTC) and can
 # be triggered manually from the Actions tab.
+#
+# Semua dataset dan skrip berada dalam archive/ (subpohon mlbb-historical-database).
 
 on:
   schedule:
@@ -21,6 +23,9 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: archive
     steps:
       - uses: actions/checkout@v4
 
@@ -38,10 +43,13 @@ jobs:
         run: python3 -m pytest tests/ -q
 
       - name: Commit and push if data changed
+        working-directory: .
         run: |
           git config user.name "mlbb-auto-updater"
           git config user.email "actions@users.noreply.github.com"
-          git add -A
+          # Skop kepada archive/ sahaja - live/ dan packages/ tidak boleh
+          #conesel changed oleh updater data.
+          git add archive/
           if git diff --cached --quiet; then
             echo "No changes — nothing to commit."
           else

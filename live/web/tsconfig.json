@@ -27,7 +27,7 @@
     ],
     "paths": {
       "@shared/*": [
-        "../shared/*"
+        "../../packages/shared/*"
       ],
       "@/*": [
         "./src/*"
@@ -36,7 +36,7 @@
   },
   "include": [
     "src",
-    "../shared",
+    "../../packages/shared",
     "vite.config.ts"
   ]
 }

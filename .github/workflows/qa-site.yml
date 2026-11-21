@@ -4,11 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - "web/**"
-      - "shared/**"
-      - "worker/**"
-      - "tools/**"
-      - "tests/**"
+      - "live/web/**"
+      - "live/worker/**"
+      - "live/tools/**"
+      - "live/tests/**"
+      - "packages/shared/**"
+      - "archive/**"
       - ".github/workflows/qa-site.yml"
   workflow_dispatch:
 
@@ -22,6 +23,9 @@ concurrency:
 jobs:
   qa:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: live
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,23 +42,30 @@ jobs:
 
       # --- worker ---
       - name: Worker unit test (jalankan normalizer sungguhan vs upstream)
-        working-directory: worker
+        working-directory: live/worker
         run: npm install --no-audit --no-fund && npm test
 
       - name: Worker typecheck
-        working-directory: worker
+        working-directory: live/worker
         run: npm run typecheck
 
       # --- web ---
       - name: Install web dependencies
-        working-directory: web
+        working-directory: live/web
         run: npm install --no-audit --no-fund
 
+      # Asset arkib dijana DULU daripada build: `npm run build` menyalin
+      # web/public/ ke site/, jadi JSON arkib mesti wujud sebelum itu.
+      - name: Jana aset arkib (sejarah patch -> web/public/archive)
+        working-directory: live
+        run: python3 tools/build_archive.py
+
       - name: Web typecheck + build
-        working-directory: web
+        working-directory: live/web
         run: npm run build
 
       - name: Cek ukuran bundle
+        working-directory: live
         run: |
           # Bundle JS/CSS dikira TANPA aset audio - lagu hero ~4.8 MB dan ia
           # bukan bundle kod, jadi tidak ikut dikira sebagai "bundle kegedean".
@@ -66,6 +77,7 @@ jobs:
           fi
 
       - name: Cek aset lagu hero
+        working-directory: live
         run: |
           test -d site/audio/PICS || { echo "folder aset audio hilang"; exit 1; }
           # Nama folder mengandungi koma dan ruang - jangan diubah.
@@ -79,16 +91,19 @@ jobs:
 
       # --- smoke test browser ---
       - name: Install Playwright
+        working-directory: live
         run: |
           python3 -m pip install --upgrade pip
           pip install playwright
           python3 -m playwright install --with-deps chromium
 
       - name: Smoke test MLBB Almanac
+        working-directory: live
         run: python3 tests/smoke_test_v2.py
 
       # --- keamanan ---
       - name: Scan kebocoran secret
+        working-directory: .
         run: |
           # Corak dipecah supaya baris ini sendiri TIDAK match corak scan.
           # Sebelum ini, fail workflow ini match corak sebab corak mengandungi
@@ -103,6 +118,7 @@ jobs:
           echo "Tidak ada secret yang terdeteksi."
 
       - name: Cek header keamanan
+        working-directory: live
         run: |
           test -f site/_headers || { echo "site/_headers hilang"; exit 1; }
           grep -q "Content-Security-Policy" site/_headers || { echo "CSP tidak ada"; exit 1; }

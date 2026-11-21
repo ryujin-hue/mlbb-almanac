@@ -4,10 +4,18 @@ import { CompositionPanel } from './components/CompositionPanel';
 import { FilterPanel } from './components/FilterPanel';
 import { FilterToolbar } from './components/FilterToolbar';
 import { HeroGrid } from './components/HeroGrid';
+import { ItemCatalog } from './components/ItemCatalog';
 import { HeroProfileModal } from './components/HeroProfileModal';
 import { MoversPanel } from './components/MoversPanel';
+import { PatchTimeline } from './components/PatchTimeline';
 import { SourcesPanel } from './components/SourcesPanel';
 import { StatStrip } from './components/StatStrip';
+import {
+  archiveApi,
+  heroSlug,
+  indexArchive,
+  type ArchiveIndex,
+} from './data/archive';
 import {
   API,
   fetchOfflineFirst,
@@ -61,6 +69,8 @@ const TABS: { id: View; label: string; icon: string }[] = [
   { id: 'heroes', label: 'Hero', icon: '◆' },
   { id: 'composition', label: 'Tim', icon: '⊞' },
   { id: 'movers', label: 'Movers', icon: '↕' },
+  { id: 'patches', label: 'Patch', icon: '≡' },
+  { id: 'items', label: 'Item', icon: '▣' },
   { id: 'sources', label: 'Data', icon: 'ⓘ' },
 ];
 
@@ -82,6 +92,9 @@ export default function App() {
   const [fromCache, setFromCache] = useState(false);
   const [openHero, setOpenHero] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Lapisan arkib (sejarah patch, katalog item, rujukan) - dimuat sekali
+  // dan berasingan daripada bundle JS supaya tab Hero tidak melambat.
+  const [archive, setArchive] = useState<ArchiveIndex | null>(null);
 
   // Tab <- hash, supaya state bisa di-share.
   useEffect(() => {
@@ -126,6 +139,12 @@ export default function App() {
     setError(null);
 
     Promise.allSettled([
+      // Lapisan arkib: sejarah patch + katalog item. Kalau gagal, laman
+      // tetap berfungsi penuh dengan meta live sahaja.
+      archiveApi
+        .core()
+        .then((core) => indexArchive(core))
+        .catch(() => null),
       // Selalu ambil matrix lengkap (rank=all). Bracket rank dihitung ulang
       // di client, jadi ganti rank tidak memicu request ulang dan grid tidak
       // flicker.
@@ -139,8 +158,12 @@ export default function App() {
       }),
       fetchOfflineFirst<{ entries: SnapshotMeta[] }>(API.snapshots(), { signal: controller.signal }),
     ])
-      .then(([indexResult, deltaResult, snapshotResult]) => {
+      .then(([archiveResult, indexResult, deltaResult, snapshotResult]) => {
         if (cancelled) return;
+
+        if (archiveResult.status === 'fulfilled' && archiveResult.value) {
+          setArchive(archiveResult.value);
+        }
 
         if (indexResult.status === 'fulfilled') {
           setIndex(indexResult.value.data);
@@ -178,6 +201,36 @@ export default function App() {
 
   const heroes = index?.heroes ?? [];
 
+  // Nota patch terakhir bagi setiap hero live (untuk strip arkib pada kad).
+  const archiveNotes = useMemo(() => {
+    const map = new Map<string, { version: string; type: string; count: number }>();
+    if (!archive) return map;
+    for (const hero of heroes) {
+      const key = hero.name.toLowerCase();
+      const record = archive.heroByName.get(key);
+      const changes = archive.heroChangesByHero.get(key) ?? [];
+      const last = changes[changes.length - 1];
+      if (!record && !last) continue;
+      map.set(hero.id, {
+        version: last?.version ?? record?.last_change_version ?? '',
+        type: last?.change_type ?? record?.last_change_type ?? '',
+        count: record?.change_count ?? changes.length,
+      });
+    }
+    return map;
+  }, [archive, heroes]);
+
+  // Bilangan nota patch arkib bagi setiap hero live - asas sort "Nota Patch".
+  const archiveChanges = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!archive) return map;
+    for (const hero of heroes) {
+      const record = archive.heroByName.get(hero.name.toLowerCase());
+      if (record) map.set(hero.id, record.change_count);
+    }
+    return map;
+  }, [archive, heroes]);
+
   const visible = useMemo(
     () =>
       selectHeroes({
@@ -191,8 +244,9 @@ export default function App() {
         sort: meta.sort,
         desc: meta.desc,
         threshold: meta.moverThreshold,
+        archiveChanges,
       }),
-    [heroes, deltaMap, meta]
+    [heroes, deltaMap, meta, archiveChanges]
   );
 
   const stats = useMemo(
@@ -265,7 +319,8 @@ export default function App() {
             </div>
           ) : null}
 
-          {status !== 'loading' && heroes.length > 0 ? (
+          {status !== 'loading' &&
+          (heroes.length > 0 || view === 'patches' || view === 'items' || view === 'sources') ? (
             <>
               {fromCache ? (
                 <div className="notice">
@@ -273,7 +328,7 @@ export default function App() {
                 </div>
               ) : null}
 
-              {view === 'heroes' ? (
+              {view === 'heroes' && heroes.length > 0 ? (
                 <>
                   <FilterToolbar
                     rankOptions={RANK_OPTIONS}
@@ -300,13 +355,14 @@ export default function App() {
                     heroes={visible}
                     favorites={favorites}
                     selected={meta.composition}
+                    archiveNotes={archiveNotes}
                     onOpen={setOpenHero}
                     onToggleSelect={meta.toggleComposition}
                   />
                 </>
               ) : null}
 
-              {view === 'composition' ? (
+              {view === 'composition' && heroes.length > 0 ? (
                 <CompositionPanel
                   heroes={heroes}
                   selected={meta.composition}
@@ -316,7 +372,7 @@ export default function App() {
                 />
               ) : null}
 
-              {view === 'movers' ? (
+              {view === 'movers' && heroes.length > 0 ? (
                 <MoversPanel
                   deltas={deltas}
                   threshold={meta.moverThreshold}
@@ -328,8 +384,31 @@ export default function App() {
                 />
               ) : null}
 
+              {view === 'patches' ? (
+                archive ? (
+                  <PatchTimeline
+                    index={archive}
+                    onOpenHero={(name) => setOpenHero(heroSlug(name))}
+                  />
+                ) : (
+                  <div className="state">Memuat arkib sejarah patch…</div>
+                )
+              ) : null}
+
+              {view === 'items' ? (
+                archive ? (
+                  <ItemCatalog index={archive} />
+                ) : (
+                  <div className="state">Memuat katalog item…</div>
+                )
+              ) : null}
+
               {view === 'sources' ? (
-                <SourcesPanel manifest={index?.manifest ?? null} snapshots={snapshots} />
+                <SourcesPanel
+                  manifest={index?.manifest ?? null}
+                  snapshots={snapshots}
+                  archive={archive}
+                />
               ) : null}
             </>
           ) : null}
@@ -354,6 +433,7 @@ export default function App() {
         <HeroProfileModal
           key={openHero}
           heroId={openHero}
+          archive={archive}
           onClose={() => setOpenHero(null)}
           onAddToTeam={(id) => meta.toggleComposition(id)}
           inTeam={meta.composition.includes(openHero)}

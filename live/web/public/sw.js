@@ -7,11 +7,21 @@
  *   - /api/heroes + /api/deltas: stale-while-revalidate, dan hasilnya
  *     dicache supaya aplikasi tetap punya data saat offline.
  */
-const VERSION = 'mlbb-almanac-v1';
+const VERSION = 'mlbb-almanac-v2';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 
-const SHELL_ASSETS = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png'];
+const SHELL_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/icon-192.png',
+  // Aset arkib (sejarah patch) - dicache supaya tab Patch boleh dibuka
+  // tanpa jaringan.
+  '/archive/core.json',
+  '/archive/reference.json',
+  '/archive/docs.json',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -82,7 +92,7 @@ self.addEventListener('fetch', (event) => {
       (cached) =>
         cached ??
         fetch(request).then((response) => {
-          if (response.ok && /\.(?:js|css|png|svg|webp|woff2?)$/.test(url.pathname)) {
+          if (response.ok && /\.(?:js|css|png|svg|webp|woff2?|json)$/.test(url.pathname)) {
             const copy = response.clone();
             caches.open(SHELL_CACHE).then((cache) => cache.put(request, copy));
           }

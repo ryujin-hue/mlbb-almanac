@@ -2,12 +2,15 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 
 import type { FilteredHero } from '../data/store';
+import { changeTypeClass } from '../data/archive';
 import { formatPercent, formatTierScore } from '../lib/format';
 
 interface Props {
   heroes: FilteredHero[];
   favorites: string[];
   selected: string[];
+  /** Nota patch arkib terakhir bagi setiap hero (live + sejarah side by side). */
+  archiveNotes?: Map<string, { version: string; type: string; count: number }>;
   onOpen: (heroId: string) => void;
   onToggleSelect: (heroId: string) => void;
 }
@@ -65,7 +68,14 @@ function TrendBadge({ delta, trend }: { delta: number | null; trend: string | nu
  * baris dikunci, baris berikutnya menimpa isi baris yang lebih tinggi -
  * angka BR/TS sempat hilang karena itu.
  */
-export function HeroGrid({ heroes, favorites, selected, onOpen, onToggleSelect }: Props) {
+export function HeroGrid({
+  heroes,
+  favorites,
+  selected,
+  archiveNotes,
+  onOpen,
+  onToggleSelect,
+}: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const [columns, setColumns] = useState(2);
   const [scrollMargin, setScrollMargin] = useState(0);
@@ -147,6 +157,7 @@ export function HeroGrid({ heroes, favorites, selected, onOpen, onToggleSelect }
               <div className="vrow__inner">
                 {row.map((hero) => {
                   const isSelected = selectedSet.has(hero.id);
+                  const note = archiveNotes?.get(hero.id);
                   return (
                     <article
                       key={hero.id}
@@ -219,6 +230,17 @@ export function HeroGrid({ heroes, favorites, selected, onOpen, onToggleSelect }
                           <div className="metric__v">{rate(hero.ban_rate)}</div>
                         </div>
                       </div>
+
+                      {note && (note.version || note.type) ? (
+                        <div className="hcard__arch">
+                          <span className={`hcard__dot hcard__dot--${changeTypeClass(note.type)}`} aria-hidden="true" />
+                          <span className="hcard__arch-v">{note.version || '—'}</span>
+                          <span className="hcard__arch-t">{note.type || '—'}</span>
+                          {note.count > 1 ? (
+                            <span className="hcard__arch-n">{note.count}×</span>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </article>
                   );
                 })}

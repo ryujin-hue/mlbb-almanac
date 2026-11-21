@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { API, fetchJson, type HeroDetailResponse } from '../data/client';
+import { HeroHistory } from './HeroHistory';
+import type { ArchiveIndex } from '../data/archive';
 import { findHeroAudioTrack } from '../data/heroAudio';
 import { useLocalStore } from '../data/store';
 import {
@@ -14,6 +16,8 @@ import { formatPercent } from '../lib/format';
 
 interface Props {
   heroId: string;
+  /** Lapisan arkib - sejarah patch hero (kalau ada). */
+  archive?: ArchiveIndex | null;
   onClose: () => void;
   onAddToTeam: (heroId: string) => void;
   inTeam: boolean;
@@ -70,7 +74,7 @@ const SWIPE_CLOSE_DISTANCE = 80;
  * Menutup profil (X, backdrop, ESC, butang Kembali, swipe turun) akan
  * menghentikan lagu hero dengan fade-out ~200ms dan reset ke 0:00.
  */
-export function HeroProfileModal({ heroId, onClose, onAddToTeam, inTeam }: Props) {
+export function HeroProfileModal({ heroId, archive, onClose, onAddToTeam, inTeam }: Props) {
   const [detail, setDetail] = useState<HeroDetailResponse | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -372,6 +376,8 @@ export function HeroProfileModal({ heroId, onClose, onAddToTeam, inTeam }: Props
                 </tr>
               </tbody>
             </table>
+
+            {archive ? <HeroHistory index={archive} heroName={heroName} /> : null}
 
             <div className="section-title">Skill ({hero.skills?.length ?? 0})</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>

@@ -22,7 +22,7 @@ export interface SourceEntry {
   status: 'ok' | 'failed';
 }
 
-import type { RatesSummary } from '../../shared/types';
+import type { RatesSummary } from '../../../packages/shared/types';
 
 export interface Manifest {
   schema_version: '1.0.0';
@@ -45,7 +45,7 @@ export interface Manifest {
   warnings: string[];
 }
 
-export type { RateHighlight, RatesSummary } from '../../shared/types';
+export type { RateHighlight, RatesSummary } from '../../../packages/shared/types';
 
 export interface HeroSkill {
   id: string;

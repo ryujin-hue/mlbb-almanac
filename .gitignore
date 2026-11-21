@@ -1,0 +1,32 @@
+# MLBB Almanac - monorepo
+#
+# Subdirektori archive/ dan live/ ada .gitignore masing-masing; fail ini
+# menutup apa yang ada di root monorepo.
+
+# Node
+node_modules/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Hasil build web (dijana semula oleh `npm run build` dalam live/web/).
+live/site/
+
+# Aset arkib dijana daripada archive/ oleh live/tools/build_archive.py.
+# Dijana semasa build CI - jangan commit (3.4 MB imej + JSON).
+live/web/public/archive/
+
+# State wrangler
+.wrangler/
+live/pages/_worker.bundle
+live/pages/.wrangler/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

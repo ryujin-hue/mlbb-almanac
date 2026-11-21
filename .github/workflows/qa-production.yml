@@ -19,6 +19,9 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: live
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,17 +37,26 @@ jobs:
           node-version: "22"
 
       - name: Install Playwright
+        working-directory: live
         run: |
           python3 -m pip install --upgrade pip
           pip install playwright
           python3 -m playwright install --with-deps chromium
 
-      - name: Cek situs produksi
+      - name: Cek situs produksi (Pages)
+        working-directory: live
+        env:
+          QA_BASE: https://mlbb-almanac.pages.dev
+        run: python3 tests/production_check.py
+
+      - name: Cek situs produksi (Worker)
+        working-directory: live
         env:
           QA_BASE: https://mlbb-data-workflow.mlvv.workers.dev
         run: python3 tests/production_check.py
 
       - name: Cek status API meta
+        working-directory: live
         run: |
           set -euo pipefail
           BASE="https://mlbb-data-workflow.mlvv.workers.dev"

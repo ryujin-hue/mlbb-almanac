@@ -27,7 +27,14 @@ export const WINDOW_OPTIONS = [
   { value: '30d', label: '30 hari' },
 ] as const;
 
-export type SortKey = 'win_rate' | 'pick_rate' | 'ban_rate' | 'tier_score' | 'name' | 'release_year';
+export type SortKey =
+  | 'win_rate'
+  | 'pick_rate'
+  | 'ban_rate'
+  | 'tier_score'
+  | 'name'
+  | 'release_year'
+  | 'patch_changes';
 
 export interface SortOption {
   value: SortKey;
@@ -41,9 +48,10 @@ export const SORT_OPTIONS: SortOption[] = [
   { value: 'ban_rate', label: 'Ban Rate' },
   { value: 'name', label: 'Nama' },
   { value: 'release_year', label: 'Tahun Rilis' },
+  { value: 'patch_changes', label: 'Nota Patch' },
 ];
 
-export type View = 'heroes' | 'composition' | 'movers' | 'sources';
+export type View = 'heroes' | 'composition' | 'movers' | 'patches' | 'items' | 'sources';
 
 export interface MetaState {
   view: View;
@@ -185,6 +193,8 @@ export interface FilterInput {
   sort: SortKey;
   desc: boolean;
   threshold: number;
+  /** Bilangan nota patch arkib mengikut hero id (untuk sort "Nota Patch"). */
+  archiveChanges?: Map<string, number>;
 }
 
 function matches(hero: SlimHero, input: FilterInput): boolean {
@@ -206,7 +216,7 @@ function matches(hero: SlimHero, input: FilterInput): boolean {
   return true;
 }
 
-function valueFor(hero: SlimHero, key: SortKey): number | string {
+function valueFor(hero: SlimHero, key: SortKey, input: FilterInput): number | string {
   switch (key) {
     case 'win_rate':
       return hero.win_rate ?? -1;
@@ -220,6 +230,8 @@ function valueFor(hero: SlimHero, key: SortKey): number | string {
       return hero.release_year ?? 0;
     case 'name':
       return hero.name;
+    case 'patch_changes':
+      return input.archiveChanges?.get(hero.id) ?? 0;
   }
 }
 
@@ -239,8 +251,8 @@ export function selectHeroes(input: FilterInput): FilteredHero[] {
 
   const direction = input.desc ? -1 : 1;
   out.sort((a, b) => {
-    const left = valueFor(a, input.sort);
-    const right = valueFor(b, input.sort);
+    const left = valueFor(a, input.sort, input);
+    const right = valueFor(b, input.sort, input);
     if (typeof left === 'string' || typeof right === 'string') {
       return String(left).localeCompare(String(right)) * direction;
     }

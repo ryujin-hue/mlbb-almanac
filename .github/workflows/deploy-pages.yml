@@ -4,8 +4,8 @@ name: Deploy Pages
 #
 # Pages hanya boleh layan fail statik + Pages Functions. API sebenar (KV,
 # cron 02:00 UTC, upstream fetch) kekal hidup di Worker — jadi
-# `pages/functions/` memproksikan /api/* dan /audio/* ke sana. Browser tetap
-# satu origin: tiada CORS, tiada perubahan pada client.
+# `live/pages/functions/` memproksikan /api/* dan /audio/* ke sana. Browser
+# kekal satu origin: tiada CORS, tiada perubahan pada client.
 #
 # Token dijangka sebagai secret repository (sama seperti deploy Worker):
 #   CLOUDFLARE_API_TOKEN  - API token Cloudflare (Workers Scripts:Edit,
@@ -20,9 +20,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "web/**"
-      - "pages/**"
-      - "shared/**"
+      - "live/web/**"
+      - "live/pages/**"
+      - "packages/shared/**"
       - ".github/workflows/deploy-pages.yml"
 
 permissions:
@@ -47,8 +47,18 @@ jobs:
         with:
           node-version: "22"
 
+      # Asset arkib dijana DULU daripada build (public/ -> site/).
+      - name: Jana aset arkib (sejarah patch -> web/public/archive)
+        working-directory: live
+        run: python3 tools/build_archive.py
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Build web (site/)
-        working-directory: web
+        working-directory: live/web
         run: |
           npm ci --no-audit --no-fund
           npm run build
@@ -65,7 +75,7 @@ jobs:
 
       - name: Pastikan projek Pages wujud
         if: steps.secret.outputs.skip != 'true'
-        working-directory: pages
+        working-directory: live/pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -89,14 +99,16 @@ jobs:
 
       - name: Deploy ke Cloudflare Pages
         if: steps.secret.outputs.skip != 'true'
-        working-directory: pages
+        working-directory: live/pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           # wrangler 4.152.0 - sama versi yang di pin dalam deploy.yml.
-          # Config pages/wrangler.toml nyatakan pages_build_output_dir="../site"
-          # dan Pages Functions dijumpai dalam pages/functions/.
+          # Config live/pages/wrangler.jsonc nyatakan pages_build_output_dir
+          #="../site" (live/site) dan Pages Functions dijumpai dalam
+          # live/pages/functions/. Config itu menang atas live/wrangler.jsonc
+          # sebab ia berada dalam direktori kerja semasa.
           npx --yes wrangler@4.152.0 pages deploy \
             --project-name=mlbb-almanac \
             --branch=main \

@@ -7,17 +7,17 @@ name: Deploy Worker + Site
 #   CLOUDFLARE_ACCOUNT_ID - account id Cloudflare
 #
 # Deploy juga boleh dibuat terus dari mesin lokal:
-#   cd worker && npm install && npm run deploy
+#   cd live/worker && npm install && npm run deploy
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - "web/**"
-      - "worker/**"
-      - "shared/**"
-      - "wrangler.jsonc"
+      - "live/web/**"
+      - "live/worker/**"
+      - "packages/shared/**"
+      - "live/wrangler.jsonc"
       - ".github/workflows/deploy.yml"
 
 permissions:
@@ -41,8 +41,18 @@ jobs:
         with:
           node-version: "22"
 
+      # Asset arkib dijana DULU daripada build (public/ -> site/).
+      - name: Jana aset arkib (sejarah patch -> web/public/archive)
+        working-directory: live
+        run: python3 tools/build_archive.py
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Build web (site/)
-        working-directory: web
+        working-directory: live/web
         run: |
           npm ci --no-audit --no-fund
           npm run build
@@ -68,6 +78,8 @@ jobs:
           # `assets.run_worker_first` sebagai array - wrangler 3 tak boleh
           # parse dua-dua itu (rangkum "Missing entry-point").
           wranglerVersion: "4.152.0"
-          # Guna wrangler.jsonc di root repo:
-          #   main   = worker/src/index.ts
-          #   assets = ./site  (hasil build web, termasuk /audio/PICS)
+          # workingDirectory = live/ supaya wrangler jumpa live/wrangler.jsonc
+          # sebagai config root (path relatif: main = worker/src/index.ts,
+          # assets = ./site). Config itu mengandungi relative path, jadi ia
+          # kekal sah walaupun repositori dipindah ke live/.
+          workingDirectory: live

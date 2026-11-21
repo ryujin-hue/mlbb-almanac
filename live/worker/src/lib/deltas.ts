@@ -5,8 +5,8 @@
  * Perhitungan dilakukan di edge supaya client cukup menerima angka yang
  * sudah jadi, bukan dua dataset penuh untuk dibandingkan sendiri.
  */
-import { tierFromScore, tierScore } from '../../../shared/tier';
-import type { HeroDelta, MetaMovers, Trend } from '../../../shared/types';
+import { tierFromScore, tierScore } from '../../../../packages/shared/tier';
+import type { HeroDelta, MetaMovers, Trend } from '../../../../packages/shared/types';
 
 export interface SnapshotHeroLike {
   id: string;

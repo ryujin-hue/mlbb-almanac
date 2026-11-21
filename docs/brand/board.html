@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MLBB Almanac — brand identity</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --base:#0B0F1A; --surface-1:#111726; --surface-2:#1A2236;
+    --line:#222C42; --line-soft:#2F3C57;
+    --text:#EEF3FA; --body:#C7D0E0; --muted:#8A97B0;
+    --cyan:#00E5FF; --gold:#F5C518; --up:#3DDC97; --down:#FF5C6C;
+    --mono:'JetBrains Mono',monospace; --sans:'Outfit',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--base);color:var(--body);font-family:var(--sans);
+    font-size:15px;line-height:1.6;
+    background-image:
+      linear-gradient(rgba(255,255,255,.016) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.016) 1px, transparent 1px);
+    background-size:64px 64px;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:56px 24px 96px;}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin:0 0 14px;}
+  h1{font-size:clamp(34px,5.2vw,58px);line-height:1.02;letter-spacing:-.022em;color:var(--text);font-weight:600;margin:0;}
+  h2{font-size:26px;line-height:1.2;letter-spacing:-.012em;color:var(--text);font-weight:600;margin:0;}
+  h3{font-size:16px;letter-spacing:-.005em;color:var(--text);font-weight:600;margin:0;}
+  p{margin:0 0 12px;}
+  section{margin-top:64px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:24px;}
+  .sec-head .num{font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:.1em;}
+  .sec-head .note{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .lede{font-size:17px;color:var(--body);max-width:60ch;margin-top:16px;}
+  .sub{color:var(--muted);font-size:14px;}
+
+  .lockup{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .lockup .mark{width:56px;height:56px;flex:none;}
+  .wm{font-family:var(--sans);display:flex;align-items:baseline;gap:.40em;line-height:1;}
+  .wm .p{font-weight:500;color:var(--muted);letter-spacing:.16em;font-size:.60em;}
+  .wm .w{font-weight:700;color:var(--text);letter-spacing:.012em;}
+
+  .hero{border:1px solid var(--line);border-radius:14px;background:var(--surface-1);padding:30px 32px;margin-top:28px;position:relative;overflow:hidden;}
+  .hero:before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:linear-gradient(180deg,var(--cyan),var(--gold));}
+  .hero h3{font-size:clamp(20px,3vw,28px);line-height:1.25;letter-spacing:-.015em;margin-bottom:10px;}
+  .hero .body{color:var(--body);font-size:15px;max-width:56ch;}
+  .hero .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;}
+  .chip{font-family:var(--mono);font-size:11px;padding:5px 10px;border:1px solid var(--line-soft);border-radius:999px;color:var(--muted);background:rgba(255,255,255,.02);}
+  .chip.c{color:var(--cyan);border-color:rgba(0,229,255,.32);background:rgba(0,229,255,.06);}
+  .chip.g{color:var(--gold);border-color:rgba(245,197,24,.32);background:rgba(245,197,24,.06);}
+
+  .tl{display:grid;gap:14px;}
+  .tl .row{border:1px solid var(--line);border-radius:11px;background:var(--surface-1);padding:20px 22px;display:grid;grid-template-columns:150px 1fr;gap:20px;align-items:start;}
+  .tl .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+  .tl .copy{font-size:19px;color:var(--text);letter-spacing:-.008em;font-weight:500;}
+  .tl .why{grid-column:2;font-size:13.5px;color:var(--muted);}
+  .tl .row.hi{border-color:rgba(0,229,255,.38);}
+
+  .sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(166px,1fr));gap:14px;}
+  .sw{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-1);}
+  .sw .chipc{height:70px;}
+  .sw .info{padding:10px 12px 12px;}
+  .sw .hex{font-family:var(--mono);font-size:12.5px;color:var(--text);}
+  .sw .role{font-size:12px;color:var(--muted);margin-top:2px;}
+  .sw .ratio{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:7px;}
+  .sw .ratio b{color:var(--up);font-weight:500;} .sw .ratio b.aa{color:var(--gold);}
+
+  .logo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .logo-grid.split{grid-template-columns:2fr 1fr;}
+  .lpanel{border:1px solid var(--line);border-radius:12px;background:var(--surface-1);padding:20px;}
+  .lpanel .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+  .lpanel .stage{height:118px;display:flex;align-items:center;justify-content:center;gap:14px;border-radius:8px;background:var(--base);border:1px solid var(--line);}
+  .lpanel .desc{font-size:13px;color:var(--body);margin-top:14px;}
+  .lpanel.pick{border-color:rgba(0,229,255,.42);position:relative;}
+  .lpanel.pick .badge{position:absolute;top:-9px;right:14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;background:var(--cyan);color:#04212B;padding:3px 9px;border-radius:4px;font-weight:700;}
+  .sizes{display:flex;align-items:flex-end;gap:18px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
+  .sizes figure{margin:0;text-align:center;}
+  .sizes figcaption{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:7px;}
+
+  pre.prompt{
+    font-family:var(--mono);font-size:12px;line-height:1.72;color:var(--body);
+    background:var(--base);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;white-space:pre-wrap;word-break:break-word;margin:0 0 14px;
+  }
+  pre.prompt .h{color:var(--cyan);} pre.prompt .c{color:var(--gold);}
+  .note-list{list-style:none;padding:0;margin:0;}
+  .note-list li{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .note-list li:last-child{border-bottom:0;}
+  .note-list .k{font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+  .spec{display:grid;grid-template-columns:180px 1fr;}
+  .spec dt{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:12px 0;border-bottom:1px solid var(--line);}
+  .spec dd{margin:0;padding:12px 0;border-bottom:1px solid var(--line);color:var(--body);font-size:14px;}
+  .spec dd .mono{color:var(--text);}
+
+  .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .pgrid div{background:var(--surface-1);padding:22px 20px;}
+  .pgrid .w{font-size:21px;font-weight:600;color:var(--text);letter-spacing:-.01em;margin-bottom:8px;}
+  .pgrid .d{font-size:13px;color:var(--muted);line-height:1.5;}
+  .pgrid .n{font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:.14em;margin-bottom:12px;}
+
+  .mock{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface-1);}
+  .mock .bar{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);}
+  .mock .bar .d{width:9px;height:9px;border-radius:50%;background:var(--line-soft);}
+  .mock .bar .u{font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .mock .in{padding:34px 32px 38px;}
+  .mock h4{font-size:clamp(21px,3.4vw,31px);line-height:1.2;color:var(--text);font-weight:600;letter-spacing:-.018em;margin:0 0 12px;max-width:22ch;}
+  .mock p{color:var(--body);font-size:14.5px;max-width:52ch;}
+  .mock .cta{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .btn{font-family:var(--mono);font-size:12px;padding:9px 16px;border-radius:7px;letter-spacing:.04em;}
+  .btn.p{background:var(--cyan);color:#04212B;font-weight:700;}
+  .btn.s{border:1px solid var(--line-soft);color:var(--body);}
+
+  .repoline{border:1px solid var(--line);border-radius:11px;background:var(--surface-1);padding:20px 22px;margin-top:18px;}
+  .repoline .rn{font-family:var(--mono);font-size:17px;color:var(--text);}
+  .repoline .rd{font-size:14px;color:var(--body);margin-top:9px;max-width:74ch;}
+  .dom-list{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .dom{border:1px solid var(--line);border-radius:11px;background:var(--surface-1);padding:18px 20px;}
+  .dom .d{font-family:var(--mono);font-size:15px;color:var(--text);}
+  .dom .r{font-size:12.5px;color:var(--muted);margin-top:6px;}
+
+  @media (max-width:900px){
+    .logo-grid,.logo-grid.split{grid-template-columns:1fr;}
+    .pgrid{grid-template-columns:1fr 1fr;}
+    .spec{grid-template-columns:1fr;} .spec dt{padding-bottom:0;border-bottom:0;} .spec dd{padding-top:2px;}
+    .note-list li{grid-template-columns:1fr;gap:4px;}
+    .tl .row{grid-template-columns:1fr;gap:10px;} .tl .why{grid-column:1;}
+    .dom-list{grid-template-columns:1fr;}
+  }
+  @media (max-width:620px){
+    .pgrid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">Brand identity / MLBB Almanac / 2026-11-20</p>
+    <div class="lockup">
+      <svg class="mark" viewBox="0 0 24 24" aria-label="MLBB Almanac mark">
+        <rect x="2" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="3" width="6" height="2.5" fill="#2F3C57"/>
+        <rect x="2" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="8" width="6" height="2.5" fill="#2F3C57"/>
+        <rect x="2" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="13" width="6" height="2.5" fill="#2F3C57"/>
+        <rect x="2" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="18" width="6" height="2.5" fill="#00E5FF"/>
+      </svg>
+      <div class="wm"><span class="p">MLBB</span><span class="w">ALMANAC</span></div>
+    </div>
+    <p class="lede">Every patch since 2016. Today's meta, same table.</p>
+    <p class="sub" style="margin-top:12px;max-width:66ch">
+      A ten-year archive of patches, balance changes, M-Series and esports, beside a live meta
+      feed refreshed every 24 hours — one reference, one API.
+    </p>
+
+    <div class="hero">
+      <h3>Every patch since 2016. Today's meta, same table.</h3>
+      <p class="body">Win rate, pick rate, ban rate, tier and full balance history for every hero.
+        Every figure carries its source and its timestamp.</p>
+      <div class="meta">
+        <span class="chip c">87 patch versions</span>
+        <span class="chip c">78 API endpoints</span>
+        <span class="chip g">refreshed daily 02:00 UTC</span>
+        <span class="chip">683 sourced images</span>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="num">01</span><h2>Name</h2><span class="note">confirmed</span></div>
+    <dl class="spec">
+      <dt>Name</dt><dd><b style="color:var(--text)">MLBB Almanac</b> — short form <span class="mono">the Almanac</span></dd>
+      <dt>Why</dt><dd>An almanac is a reference you consult for the current reading — a table of tides gives today's tide and every tide before it. That is exactly the product: the archive and today's meta are the same table, and the live entry is the one you read.</dd>
+      <dt>Not</dt><dd>Not a magazine, not a guide, not a "hub". A published reference that changes on a schedule.</dd>
+      <dt>Spoken</dt><dd>"Check the Almanac" — works in a ranked lobby, a Discord channel and a pull request.</dd>
+      <dt>Replaces</dt><dd>MLBB Meta Center (live) and MLBB Historical Database (archive)</dd>
+    </dl>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">02</span><h2>Taglines</h2><span class="note">short · medium · explicit</span></div>
+    <div class="tl">
+      <div class="row hi">
+        <div class="lbl">Short · 6 words</div>
+        <div class="copy">Ten years of patches. Today's meta.</div>
+        <div class="why">Concrete span, two halves, no adjectives. Fits a nav bar, a logo strip and a GitHub description.</div>
+      </div>
+      <div class="row">
+        <div class="lbl">Medium · 8 words</div>
+        <div class="copy">Complete patch history and live meta for every hero.</div>
+        <div class="why">States coverage instead of quality. "Complete" is a fact here — 87 patch versions and 133 heroes, not a claim about effort.</div>
+      </div>
+      <div class="row">
+        <div class="lbl">Historical + live</div>
+        <div class="copy">Every patch since 2016 and today's live meta, in one almanac.</div>
+        <div class="why">The one that names the mechanism. "In one almanac" says the two datasets are a single reference, not two products with a shared homepage.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">03</span><h2>Colour</h2><span class="note">contrast measured on #0B0F1A</span></div>
+    <div class="sw-grid">
+      <div class="sw"><div class="chipc" style="background:#0B0F1A"></div><div class="info">
+        <div class="hex">#0B0F1A</div><div class="role">Primary background</div><div class="ratio">reference surface</div></div></div>
+      <div class="sw"><div class="chipc" style="background:#111726"></div><div class="info">
+        <div class="hex">#111726</div><div class="role">Surface 1 — cards, panels</div><div class="ratio">body text <b>11.5:1</b></div></div></div>
+      <div class="sw"><div class="chipc" style="background:#1A2236"></div><div class="info">
+        <div class="hex">#1A2236</div><div class="role">Surface 2 — table headers</div><div class="ratio">body text <b>9.4:1</b></div></div></div>
+      <div class="sw"><div class="chipc" style="background:#222C42"></div><div class="info">
+        <div class="hex">#222C42</div><div class="role">Hairline — borders, grid rules</div><div class="ratio">non-text</div></div></div>
+      <div class="sw"><div class="chipc" style="background:#2F3C57"></div><div class="info">
+        <div class="hex">#2F3C57</div><div class="role">Inactive rows, disabled cells</div><div class="ratio">non-text</div></div></div>
+      <div class="sw"><div class="chipc" style="background:#EEF3FA"></div><div class="info">
+        <div class="hex">#EEF3FA</div><div class="role">Primary text, headings</div><div class="ratio">on base <b>17.2:1</b></div></div></div>
+      <div class="sw"><div class="chipc" style="background:#C7D0E0"></div><div class="info">
+        <div class="hex">#C7D0E0</div><div class="role">Body text</div><div class="ratio">on base <b>12.3:1</b></div></div></div>
+      <div class="sw"><div class="chipc" style="background:#8A97B0"></div><div class="info">
+        <div class="hex">#8A97B0</div><div class="role">Muted — timestamps, sources</div><div class="ratio">on base <b class="aa">6.5:1</b></div></div></div>
+      <div class="sw"><div class="chipc" style="background:#00E5FF"></div><div class="info">
+        <div class="hex">#00E5FF</div><div class="role">Primary accent — live values</div><div class="ratio">on base <b>12.4:1</b></div></div></div>
+      <div class="sw"><div class="chipc" style="background:#F5C518"></div><div class="info">
+        <div class="hex">#F5C518</div><div class="role">Secondary accent — patch tags</div><div class="ratio">on base <b>11.7:1</b></div></div></div>
+      <div class="sw"><div class="chipc" style="background:#3DDC97"></div><div class="info">
+        <div class="hex">#3DDC97</div><div class="role">Positive — win rate up</div><div class="ratio">on base <b>10.8:1</b></div></div></div>
+      <div class="sw"><div class="chipc" style="background:#FF5C6C"></div><div class="info">
+        <div class="hex">#FF5C6C</div><div class="role">Negative — win rate down</div><div class="ratio">on base <b class="aa">6.4:1</b></div></div></div>
+    </div>
+    <p class="sub" style="margin-top:16px;max-width:72ch">
+      Migration from the current build: <span class="mono">#0b0f16 → #0B0F1A</span>,
+      <span class="mono">#d8a838 → #F5C518</span>. The old teal <span class="mono">#3fb8a0</span> is dropped —
+      cyan and gold already split the work between live values and historical tags.
+    </p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">04</span><h2>Logo</h2><span class="note">mark, wordmark, construction, prompt</span></div>
+
+    <div class="logo-grid">
+      <div class="lpanel pick">
+        <span class="badge">PICKED</span>
+        <div class="t">Mark — "the almanac table"</div>
+        <div class="stage">
+          <svg viewBox="0 0 24 24" width="60" height="60">
+            <rect x="2" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="3" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="2" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="8" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="2" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="13" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="2" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="18" width="6" height="2.5" fill="#00E5FF"/>
+          </svg>
+        </div>
+        <p class="desc">Twelve dashes in three columns and four rows — a page of tabulated
+          entries. One cell is lit: the last in reading order, which is the current one.
+          The archive is the grid; the live entry is the only cyan.</p>
+        <div class="sizes">
+          <figure><svg viewBox="0 0 24 24" width="32" height="32"><rect x="2" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="18" width="6" height="2.5" fill="#00E5FF"/></svg><figcaption>32px</figcaption></figure>
+          <figure><svg viewBox="0 0 24 24" width="24" height="24"><rect x="2" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="18" width="6" height="2.5" fill="#00E5FF"/></svg><figcaption>24px</figcaption></figure>
+          <figure><svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="2" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="18" width="6" height="2.5" fill="#00E5FF"/></svg><figcaption>16px</figcaption></figure>
+          <figure><svg viewBox="0 0 24 24" width="24" height="24"><rect x="2" y="3" width="6" height="2.5" fill="#4A5878"/><rect x="9" y="3" width="6" height="2.5" fill="#4A5878"/><rect x="16" y="3" width="6" height="2.5" fill="#4A5878"/><rect x="2" y="8" width="6" height="2.5" fill="#4A5878"/><rect x="9" y="8" width="6" height="2.5" fill="#4A5878"/><rect x="16" y="8" width="6" height="2.5" fill="#4A5878"/><rect x="2" y="13" width="6" height="2.5" fill="#4A5878"/><rect x="9" y="13" width="6" height="2.5" fill="#4A5878"/><rect x="16" y="13" width="6" height="2.5" fill="#4A5878"/><rect x="2" y="18" width="6" height="2.5" fill="#4A5878"/><rect x="9" y="18" width="6" height="2.5" fill="#4A5878"/><rect x="16" y="18" width="6" height="2.5" fill="#00E5FF"/></svg><figcaption>hi-contrast</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="lpanel">
+        <div class="t">Wordmark lockup</div>
+        <div class="stage" style="height:96px">
+          <svg viewBox="0 0 24 24" width="34" height="34">
+            <rect x="2" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="3" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="3" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="2" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="8" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="8" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="2" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="13" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="13" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="2" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="9" y="18" width="6" height="2.5" fill="#2F3C57"/><rect x="16" y="18" width="6" height="2.5" fill="#00E5FF"/>
+          </svg>
+          <div class="wm" style="font-size:28px"><span class="p">MLBB</span><span class="w">ALMANAC</span></div>
+        </div>
+        <p class="desc">MLBB in 500 weight, slate, +0.16em tracking — a label on the data.
+          ALMANAC in 700 weight, near-white, +0.012em — the thing itself. Gap 0.40em.</p>
+      </div>
+
+      <div class="lpanel">
+        <div class="t">Favicon / app icon</div>
+        <div class="stage" style="height:96px">
+          <svg viewBox="0 0 32 32" width="52" height="52" style="border-radius:11px">
+            <rect width="32" height="32" rx="7" fill="#0B0F1A"/>
+            <rect x="4" y="6" width="6" height="2.5" fill="#2F3C57"/><rect x="11" y="6" width="6" height="2.5" fill="#2F3C57"/><rect x="18" y="6" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="4" y="11" width="6" height="2.5" fill="#2F3C57"/><rect x="11" y="11" width="6" height="2.5" fill="#2F3C57"/><rect x="18" y="11" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="4" y="16" width="6" height="2.5" fill="#2F3C57"/><rect x="11" y="16" width="6" height="2.5" fill="#2F3C57"/><rect x="18" y="16" width="6" height="2.5" fill="#2F3C57"/>
+            <rect x="4" y="21" width="6" height="2.5" fill="#2F3C57"/><rect x="11" y="21" width="6" height="2.5" fill="#2F3C57"/><rect x="18" y="21" width="6" height="2.5" fill="#00E5FF"/>
+          </svg>
+        </div>
+        <p class="desc">Same 12-cell art on a #0B0F1A rounded square, 32-unit box, cells at
+          1u inset. The lit cell keeps full-bleed width — do not inset it.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:30px;margin-bottom:12px">Construction</h3>
+    <ul class="note-list">
+      <li><span class="k">Grid</span><span>24 × 24 units. 3 columns at x = 2, 9, 16. 4 rows at y = 3, 8, 13, 18. Cell 6 × 2.5u. Column gap 1u, row gap 2.5u — cells bind horizontally into rows, which is what makes it read as a table rather than a grid of blocks.</span></li>
+      <li><span class="k">Lit cell</span><span>Row 4, column 3 — the last cell in reading order, so it means "the current entry". Never move it to the middle; a lit middle cell reads as "selected", not "now".</span></li>
+      <li><span class="k">Colour</span><span>Dark surface: cells #2F3C57, lit cell #00E5FF. Light surface: cells #2F3C57, lit cell #007C8E (4.5:1 on #F4F6FA). Print single-colour: all #0B0F1A. Gold never appears in the mark — it is reserved for patch tags and verified-source marks.</span></li>
+      <li><span class="k">Minimum size</span><span>16px digital. Below 16px, drop the middle two rows and keep two rows of three.</span></li>
+      <li><span class="k">Clear space</span><span>1u on all sides, measured from the outer cell edges.</span></li>
+      <li><span class="k">Motion</span><span>On refresh, the lit cell steps from its old position to the new last cell over 180ms; the grid does not move. No pulse, no glow, no shimmer.</span></li>
+      <li><span class="k">Rejected</span><span>4×4 squares (mushes below 24px, reads as a QR code) · 2×2 blocks (reads as an app grid) · vertical stack (reads as a list icon) · a lit middle cell (loses "now") · a fully lit row (reads as a progress bar).</span></li>
+      <li><span class="k">Forbidden</span><span>No gradients, no glow, no rounded corners, no drop shadows, no hero silhouettes, no shield, no crown, no hexagon, no compass rose, no book illustration.</span></li>
+    </ul>
+
+    <h3 style="margin-top:30px;margin-bottom:12px">Image-generation prompt</h3>
+    <pre class="prompt">MARK — flat vector logo on a solid #0B0F1A background.
+A grid of twelve short horizontal rectangular dashes, arranged in three columns
+and four rows, evenly spaced. Eleven dashes are flat desaturated slate blue
+#2F3C57. The single dash in the bottom-right position is flat electric cyan
+#00E5FF. Each dash is 6 units wide and 2.5 units tall on a 24-unit square
+canvas; column gap 1 unit, row gap 2.5 units; square corners, no outlines,
+no gradients, no shadows, no texture, no text. Centred with even margins.
+Geometric, minimal, high information density, reference-book aesthetic.
+
+WORDMARK LOCKUP — same background and same 12-dash mark on the left, followed
+by the text "MLBB ALMANAC" in a clean geometric sans-serif, all caps. "MLBB" in
+medium weight slate blue #2F3C57 with wide letter spacing, "ALMANAC" in bold
+near-white #EEF3FA with tight tracking. Baseline aligned, single line, no
+stylised letterforms, no outline text, no shadow.
+
+FAVICON — the 12-dash mark centred on a #0B0F1A rounded square with 14 percent
+corner radius; eleven dashes #2F3C57, bottom-right dash #00E5FF. Square icon,
+no text, no gradient.</pre>
+    <p class="sub" style="max-width:74ch">
+      Production art is the SVG in <span class="mono">assets/</span> — it is the only version with exact
+      hex values and a legible wordmark. Use the prompt for exploration, social avatars and
+      anything a raster generator has to produce.
+    </p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">05</span><h2>Brand personality</h2><span class="note">four words, each testable</span></div>
+    <div class="pgrid">
+      <div><div class="n">01</div><div class="w">Tabulated</div><div class="d">Everything lands in a table: comparable, sortable, quotable. If a claim cannot be put in a column, it does not go in.</div></div>
+      <div><div class="n">02</div><div class="w">Current</div><div class="d">Refreshed at 02:00 UTC and timestamped on every screen. Stale or offline is stated, not hidden behind a cached number.</div></div>
+      <div><div class="n">03</div><div class="w">Sourced</div><div class="d">Every figure links back to where it came from. Where there is no source, the API returns available: false rather than a number.</div></div>
+      <div><div class="n">04</div><div class="w">Unadorned</div><div class="d">No verdicts, no framing, no adjectives. A patch with no hero data is listed as a patch with no hero data.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">06</span><h2>Homepage hero</h2><span class="note">final copy</span></div>
+    <div class="mock">
+      <div class="bar">
+        <span class="d"></span><span class="d"></span><span class="d"></span>
+        <span class="u" style="margin-left:8px">mlbbalmanac.com</span>
+        <span class="u" style="margin-left:auto">patch 2.2.23 · updated 4h ago</span>
+      </div>
+      <div class="in">
+        <h4>Every patch since 2016. Today's meta, same table.</h4>
+        <p>Win rate, pick rate, ban rate, tier and full balance history for every hero —
+          every figure sourced, every refresh timestamped.</p>
+        <div class="cta">
+          <span class="btn p">Open live meta</span>
+          <span class="btn s">Browse archive</span>
+          <span class="btn s">Read the API</span>
+        </div>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:14px;max-width:72ch">
+      Two sentences, no adjectives doing marketing work. The first line gives the span and the
+      unification; the second says what you actually get. The three buttons name the three
+      surfaces so each audience finds its own door.
+    </p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">07</span><h2>Repository &amp; domain</h2><span class="note">naming</span></div>
+    <div class="repoline">
+      <div class="rn">ryujin-hue/mlbb-almanac</div>
+      <div class="rd">One monorepo, two surfaces, one history. Layout:
+        <span class="mono">archive/</span> (the 78-endpoint FastAPI app and its CSV datasets),
+        <span class="mono">live/</span> (the Cloudflare Worker, KV pipeline and the web client),
+        <span class="mono">packages/</span> (the shared tier and rate formulas so a number at the
+        edge and a number in the browser cannot disagree),
+        <span class="mono">docs/</span>. The two existing repositories keep their own CI and
+        secrets until they are folded in.</div>
+    </div>
+    <div class="dom-list" style="margin-top:16px">
+      <div class="dom"><div class="d">mlbbalmanac.com</div><div class="r">Primary. Exact brand, .com, hosts the site plus api. and docs. subdomains.</div></div>
+      <div class="dom"><div class="d">almanac.gg</div><div class="r">Shortest read-aloud. The .gg TLD signals competitive gaming without saying "esports".</div></div>
+      <div class="dom"><div class="d">mlbb-almanac.dev</div><div class="r">Dev-facing. Reads as API-first, which suits the analysts and integrators in the audience.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">08</span><h2>Copy blocks</h2><span class="note">ready to paste</span></div>
+    <dl class="spec">
+      <dt>Repo description</dt><dd>Complete MLBB reference since 2016 — patch history, hero and item balance changes, M-Series and esports, plus live win, pick and ban rate and tier lists, refreshed daily and served over a 78-endpoint API.</dd>
+      <dt>Brand summary</dt><dd>MLBB Almanac is the complete reference for Mobile Legends: Bang Bang — ten years of patch history and balance changes beside today's win, pick and ban rates, tier lists and matchup data, refreshed daily and served over an open API.</dd>
+      <dt>README opener</dt><dd><span class="mono"># MLBB Almanac</span><br>Every patch since 2016. Today's meta, same table.</dd>
+      <dt>Short desc</dt><dd>Ten years of patches. Today's meta.</dd>
+    </dl>
+  </section>
+
+</div>
+</body>
+</html>

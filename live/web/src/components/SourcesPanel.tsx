@@ -1,4 +1,6 @@
 import type { SnapshotMeta } from '../data/client';
+import type { ArchiveIndex } from '../data/archive';
+import { ArchivePanel } from './ArchivePanel';
 import { formatDateTime, formatRelative } from '../lib/format';
 
 interface Props {
@@ -11,10 +13,12 @@ interface Props {
     warnings: string[];
   } | null;
   snapshots: SnapshotMeta[];
+  /** Lapisan arkib sejarah (rujukan + dokumen). */
+  archive?: ArchiveIndex | null;
 }
 
 /** Data transparency: versi dataset, timestamp, sumber, dan warning. */
-export function SourcesPanel({ manifest, snapshots }: Props) {
+export function SourcesPanel({ manifest, snapshots, archive }: Props) {
   return (
     <>
       <section className="panel">
@@ -111,6 +115,8 @@ export function SourcesPanel({ manifest, snapshots }: Props) {
           </table>
         )}
       </section>
+
+      {archive ? <ArchivePanel archive={archive} /> : null}
 
       {manifest && manifest.warnings.length > 0 ? (
         <section className="panel">

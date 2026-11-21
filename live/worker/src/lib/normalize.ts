@@ -1,5 +1,5 @@
 import { clamp, toIsoNow } from './time';
-import { tierFromScore, tierScore } from '../../../shared/tier';
+import { tierFromScore, tierScore } from '../../../../packages/shared/tier';
 import { buildCounterGraph, collectSynergies, deriveCounterSets } from './counters';
 import type {
   CounterEdge,
