@@ -87,8 +87,42 @@ def to_int(value: str) -> int:
     return int(match.group()) if match else 0
 
 
-def resolve_image(source_path: str) -> str | None:
-    """Cari fail imej sebenar untuk laluan dalam CSV, pulangkan URL relatif."""
+def tokens(name: str) -> set[str]:
+    """Pecahkan nama fail kepada token yang bermakna."""
+    parts = re.split(r"[^A-Za-z0-9]+", name.lower())
+    drop = {"onees", "mlbb", "image", "img", "the", "of"}
+    return {p for p in parts if p and p not in drop and not p.isdigit()}
+
+
+def build_image_index() -> list[tuple[str, set[str]]]:
+    """Indeks semua imej arkib: ( laluan relatif, token )."""
+    index: list[tuple[str, set[str]]] = []
+    images_dir = ARCHIVE / "images"
+    if not images_dir.is_dir():
+        return index
+    for path in sorted(images_dir.rglob("*")):
+        if path.is_file():
+            rel = path.relative_to(ARCHIVE).as_posix()
+            index.append((rel, tokens(path.stem)))
+    return index
+
+
+IMAGE_INDEX: list[tuple[str, set[str]]] = []
+
+
+def image_url(source_rel: str) -> str:
+    """Laluan sumber dalam arkib -> URL relatif untuk laman."""
+    return "archive/img/" + "/".join(source_rel.split("/")[1:])
+
+
+def resolve_source(source_path: str) -> str | None:
+    """Cari fail imej sebenar untuk laluan dalam CSV, pulangkan laluan relatif.
+
+    Archive lama ada beberapa nama fail lapuk dalam markdown (contoh
+    `onees_land_of_dawn_overview_2023.jpg` yang kini dipanggil
+    `land-of-dawn-overview-2023.jpg`). Kalau laluan tepat tiada, cuba
+    padankan token nama - "onees" dan "mlbb" diabaikan.
+    """
     raw = clean(source_path)
     if not raw or raw == "MISSING_IMAGE":
         return None
@@ -99,10 +133,20 @@ def resolve_image(source_path: str) -> str | None:
     candidates.extend(f"images/{folder}/{base}" for folder in IMAGE_DIRS)
 
     for candidate in candidates:
-        source = ARCHIVE / candidate
-        if source.exists():
-            target = "archive/img/" + "/".join(candidate.split("/")[1:])
-            return target
+        if (ARCHIVE / candidate).exists():
+            return candidate
+
+    # Padanan kabur: token yang sama, dengan skor token sama.
+    wanted = tokens(base)
+    if not wanted:
+        return None
+    best: tuple[int, str] | None = None
+    for rel, rel_tokens in IMAGE_INDEX:
+        overlap = len(wanted & rel_tokens)
+        if overlap >= 2 and (best is None or overlap > best[0]):
+            best = (overlap, rel)
+    if best:
+        return best[1]
     return None
 
 
@@ -143,6 +187,9 @@ def build() -> int:
         return 1
 
     OUT.mkdir(parents=True, exist_ok=True)
+
+    global IMAGE_INDEX
+    IMAGE_INDEX = build_image_index()
 
     # ------------------------------------------------------------- patches
     patch_rows = read_csv(ARCHIVE / "patch_index.csv")
@@ -218,7 +265,8 @@ def build() -> int:
         history = sorted(
             item_changes_per_item.get(name, []), key=lambda c: version_key(c["version"])
         )
-        image = resolve_image(row.get("image_path"))
+        image_source = resolve_source(row.get("image_path"))
+        image = image_url(image_source) if image_source else None
         items.append(
             {
                 **{col: clean(row.get(col)) for col in ITEM_COLUMNS if col != "sources"},
@@ -261,10 +309,14 @@ def build() -> int:
             rel = match.group(1)
             if rel.startswith("http"):
                 continue
-            resolved = resolve_image(rel)
-            if resolved:
-                referenced_images.add(rel if (ARCHIVE / rel).exists() else rel.replace("images/t1g/", "images/"))
-                markdown = markdown.replace(rel, resolved)
+            source = resolve_source(rel)
+            if source:
+                referenced_images.add(source)
+                markdown = markdown.replace(rel, image_url(source))
+            else:
+                # Imej yang tiada dalam arkib - buang, jangan biarkan ikon
+                # rosak pada laman.
+                markdown = markdown.replace(match.group(0), "")
         docs.append({"id": doc_id, "title": title, "file": filename, "markdown": markdown})
 
     image_stats = copy_images(referenced_images)
