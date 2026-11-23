@@ -45,14 +45,17 @@ commit, push mencetuskan build, jadi kelewatan paling lama satu hari.
 
 ## Frontend
 
-- **React + Vite**, tanpa state management luaran (Zustand untuk dua store).
-- **Tab**: Hero, Tim, Movers, Patch, Item, Data.
-- **Arkib dimuat lazy**: `core.json` (273 KB) diambil selari dengan API live;
-  `reference.json` dan `docs.json` hanya diambil bila tab Data dibuka.
+- **React + Vite**, tanpa state management luaran (Zustand untuk satu store).
+- **Routing laluan** (`router.tsx`, tanpa dependency router): `/`, `/heroes`,
+  `/heroes/<hero>`, `/movers`, `/patches`, `/patches/<versi>`, `/items`,
+  `/data`. Server menyervis `index.html` untuk laluan SPA (Pages `_redirects`,
+  Worker `not_found_handling`).
+- **Arkib dimuat lazy**: `core.json` (303 KB) diambil selari dengan API live;
+  `reference.json` dan `docs.json` hanya diambil bila halaman Data dibuka.
 - **Rate dihitung semula di client** (`applyRankScope`) supaya ganti rank
   tidak memicu request ulang dan grid tidak flicker.
-- **Virtualizer** (`@tanstack/react-virtual`) untuk grid hero - senarai
-  133 kad bergambar.
+- **Kad hero** (kad atau jadual) - tiada virtualizer; 133 kad dimuat sekali
+  sahaja, cukup kecil untuk satu halaman.
 
 ## Worker
 

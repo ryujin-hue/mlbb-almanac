@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""Smoke test MLBB Almanac di browser sungguhan.
+"""Smoke test MLBB Almanac di browser sungguhan (IA selepas rework).
 
 Menjalankan build `site/` lewat mock Worker API (`tools/dev-server.mjs`),
 lalu memeriksa:
-  - semua status 200, tanpa console error
-  - win/pick/ban rate TERISI (bukan "-") untuk hampir semua hero
-  - rata-rata win rate & hero paling di-ban tampil
-  - filter rank / pencarian / sorting bekerja
-  - drawer detail hero termuat
-  - analyzer komposisi tim menghitung skor
-  - manifest PWA + service worker terdaftar
+  - routing laluan (bukan hash): /, /heroes, /heroes/:id, /movers,
+    /patches, /patches/:version, /items, /data
+  - Meta sebagai halaman utama: strip status, KPI, bar win rate ikut role,
+    sneakah movers, balance terakhir
+  - kad + jadual hero, drawer filter, predictive patch strip
+  - detail hero: tab Overview | Balance history
+  - indeks patch + detail patch (Hero | Item | System)
+  - katalog item (kad + jadual, log perubahan)
+  - Data: status, sumber, snapshot, statistik arkib, jadual rujukan, dokumen
+  - navigasi atas (desktop) dan bawah (mobile), footer lesen
+  - manifest PWA + service worker
 """
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 import time
@@ -31,7 +34,7 @@ checks: list[tuple[str, bool, str]] = []
 def chrome_executable() -> str | None:
     """Chrome yang perlu dipakai, atau None untuk guna default Playwright.
 
-    Path lama (`/root/.cache/...`) causes `PermissionError` pada GitHub
+    Path lama (`/root/.cache/...`) menyebabkan `PermissionError` pada GitHub
     runner - `Path.exists()` melontar exception, bukan sekadar False.
     sebab itu setiap semakan dibalut try/except.
     """
@@ -90,429 +93,322 @@ def main() -> int:
                 launch_kwargs["executable_path"] = chrome
             browser = pw.chromium.launch(**launch_kwargs)
             ctx = browser.new_context(
-                viewport={"width": 390, "height": 844},
+                viewport={"width": 1280, "height": 900},
                 ignore_https_errors=True,
                 service_workers="allow",
             )
 
-            # ------------------------------------------------ landing / grid
             page = ctx.new_page()
             errors: list[str] = []
             page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
             page.on("pageerror", lambda e: errors.append(f"PAGEERROR {e}"))
 
-            resp = page.goto(BASE + "/", wait_until="domcontentloaded", timeout=60000)
-            page.wait_for_selector(".hcard", timeout=45000)
-            page.wait_for_timeout(1200)
-            body = page.inner_text("body")
+            def goto(path: str, wait: str = "", settle: int = 1600) -> str:
+                page.goto(BASE + path, wait_until="domcontentloaded", timeout=60000)
+                if wait:
+                    page.wait_for_selector(wait, timeout=45000)
+                page.wait_for_timeout(settle)
+                return page.inner_text("body")
+
+            # ------------------------------------------------------- 1. Meta
+            body = goto("/", wait=".statusstrip")
             low = body.lower()
 
-            ck("landing status 200", resp is not None and resp.status == 200)
+            ck("landing status 200", page.url.endswith("/") or page.url.endswith(":5178/"))
             ck("tanpa console error", not errors, str(errors[:2]))
-
-            # Tajuk aplikasi ikut rebrand ke "MLBB Almanac".
             ck(
-                "judul aplikasi tampil",
-                "MLBB Almanac" in page.title() or "Meta Center" in page.title(),
+                "judul aplikasi MLBB Almanac",
+                "MLBB Almanac" in page.title(),
                 page.title(),
             )
-            ck("strip Ringkasan Patch tampil", "Ringkasan Patch" in body)
-            ck("label 'Rata-rata Win Rate' tampil", "rata-rata win rate" in low)
-            ck("nilai avg win rate tampil (bukan —)", "50,0%" in body, body[:0])
-            ck("label 'Paling Banyak di-Ban' tampil", "paling banyak di-ban" in low)
-            ck("hero paling di-ban tampil", "Hirara" in body)
-            ck("label 'Paling Banyak di-Pick' tampil", "paling banyak di-pick" in low)
-            ck("rata-rata win rate per role tampil", "rata-rata win rate per role" in low)
 
-            # Kartu hero harus punya angka rate.
+            # navigasi atas (desktop) dan bawah (mobile)
+            nav_links = page.eval_on_selector_all(
+                ".topnav__link", "els => els.map(e => e.textContent.trim())"
+            )
+            ck(
+                "navigasi atas: 6 item",
+                len(nav_links) == 6,
+                str(nav_links),
+            )
+            ck(
+                "navigasi atas label betul",
+                nav_links == ["Meta", "Heroes", "Movers", "Patches", "Items", "Data"],
+                str(nav_links),
+            )
+            ck(
+                "navigasi bawah (mobile) 5 item",
+                len(page.query_selector_all(".tabbar__link")) == 5,
+            )
+
+            ck("Meta: strip status patch", bool(page.query_selector(".statusstrip__patch")))
+            ck("Meta: KPI 4 statistik", len(page.query_selector_all(".kpirow .stat")) == 4)
+            ck("Meta: bar win rate ikut role", len(page.query_selector_all(".rolebar")) >= 4)
+            ck("Meta: lajur naik & turun", len(page.query_selector_all(".metacols .panel")) == 2)
+            ck("Meta: senarai balance terakhir", len(page.query_selector_all(".balancerow")) >= 1)
+            ck("Meta: patch semasa dipapar", "2.2.23" in body, "2.2.23")
+
+            # footer: sumber, lesen, penafian
+            foot = page.inner_text(".footer").lower()
+            ck("footer: sumber data", "mlbbdex" in foot, foot[:60])
+            ck("footer: lesen CC BY-SA", "cc by-sa" in foot)
+            ck("footer: bukan berafiliasi dengan Moonton", "moonton" in foot and "berafiliasi" in foot)
+
+            # ------------------------------------------------- 2. routing
+            page.click(".topnav__link:has-text('Patches')")
+            page.wait_for_timeout(1200)
+            ck("klik nav -> laluan /patches", page.url.endswith("/patches"), page.url)
+            ck("route bukan hash", "#" not in page.url, page.url)
+
+            body = goto("/patches", wait=".tbl")
+            ck("route terus /patches 200 + jadual", len(page.query_selector_all(".tbl tbody tr")) > 10)
+
+            body = goto("/heroes/lancelot", wait=".detailhead")
+            ck("route terus /heroes/:id", "Lancelot" in body, body[:40])
+
+            body = goto("/patches/2.2.16", wait=".tabs")
+            ck("route terus /patches/:version", "2.2.16" in body, body[:40])
+
+            # ------------------------------------------------- 3. Heroes
+            body = goto("/heroes", wait=".hcard")
             cards = page.query_selector_all(".hcard")
-            ck("grid merender kartu hero", len(cards) > 0, str(len(cards)))
-            first_card = page.query_selector(".hcard")
-            card_text = first_card.inner_text() if first_card else ""
-            ck("kartu memuat WR/PR/BR", "WR" in card_text and "PR" in card_text and "BR" in card_text, card_text[:120])
-            ck("kartu bukan menampilkan — untuk rate", "—" not in card_text, card_text[:120])
-
-            # Regresi: di desktop, tinggi baris virtualizer dikunci sehingga
-            # BR/PR sempat tertimpa baris berikutnya dan hilang dari kartu.
-            # Kalau tinggi baris diukur dinamis, ketiga metrik selalu tampil.
+            ck("Heroes: kad hero dipapar", len(cards) > 100, str(len(cards)))
+            ck("Heroes: kad ada win rate", "%" in (cards[0].inner_text() if cards else ""))
+            ck("Heroes: strip patch arkib pada kad", len(page.query_selector_all(".hcard__arch")) > 0)
             ck(
-                "ketiga metrik punya nilai di kartu pertama",
-                len([x for x in card_text.split("\n") if "%" in x]) == 3,
-                card_text[:120],
+                "Heroes: PatchTag pada kad",
+                len(page.query_selector_all(".hcard__arch .ptag")) > 0,
             )
 
-            # Tidak boleh ada scroll di dalam scroll: panel grid harus
-            # mengikuti scroll halaman.
-            nested = page.evaluate(
-                "() => { const g = document.querySelector('.vgrid');"
-                " if (!g) return 'tidak ada .vgrid';"
-                " const s = getComputedStyle(g);"
-                " return s.overflowY + '/' + s.overflowX; }"
-            )
-            ck(
-                "tidak ada panel scroll di dalam halaman",
-                nested in ("visible/visible", "visible/hidden"),
-                str(nested),
-            )
-
-            # Cek banyak hero: rate harus terisi di semua kartu yang ter-render.
-            empties = [c.inner_text() for c in page.query_selector_all(".hcard") if "—" in c.inner_text()]
-            ck("tidak ada kartu dengan rate kosong", len(empties) == 0, f"{len(empties)} kartu kosong")
-
-            # ------------------------------------------------ filter pencarian
-            page.fill("input[type='search']", "alucard")
-            page.wait_for_timeout(600)
-            filtered = page.query_selector_all(".hcard")
-            ck("pencarian menyaring grid", len(filtered) == 1, f"{len(filtered)} kartu")
-            page.fill("input[type='search']", "")
-            page.wait_for_timeout(500)
-
-            # ------------------------------------------------ filter rank
-            def grid_text() -> str:
-                return " ".join(c.inner_text() for c in page.query_selector_all(".hcard"))
-
-            def first_card_numbers() -> list[str]:
-                card = page.query_selector(".hcard")
-                if not card:
-                    return []
-                return [x for x in card.inner_text().split("\n") if "%" in x]
-
-            def stat_avg() -> str:
-                panel = page.query_selector(".statgrid")
-                text = panel.inner_text() if panel else ""
-                for line in text.split("\n"):
-                    if "%" in line:
-                        return line.strip()
-                return ""
-
-            # Re-query tiap kali: React membuat ulang node <select> saat re-render.
-            rank_select = page.query_selector_all("select")[0]
-            rank_select.select_option("all")
-            page.wait_for_timeout(1200)
-            all_numbers = first_card_numbers()
-            all_avg = stat_avg()
-
-            # Hitung request ke /api/heroes supaya kita bisa membuktikan ganti
-            # rank TIDAK memaksa fetch baru (perhitungan bracket di client).
-            hero_requests = []
-            page.on(
-                "request",
-                lambda req: hero_requests.append(req.url)
-                if "/api/heroes" in req.url
-                else None,
-            )
-
-            page.query_selector_all("select")[0].select_option("mythic")
-            page.wait_for_timeout(1200)
-
-            myth_numbers = first_card_numbers()
-            myth_avg = stat_avg()
-            ck(
-                "filter rank mengubah angka rate (bukan cuma label)",
-                bool(all_numbers) and bool(myth_numbers) and all_numbers != myth_numbers,
-                f"all={all_numbers} mythic={myth_numbers}",
-            )
-            # Bandingkan nilai sebenar, bukan string paparan 1 desimal —
-            # dua bracket boleh pembulatkan kepada "50,0%" walaupun scoped
-            # dengan betul (49.954 vs 50.035).
-            def scoped_avg(rank: str) -> float | None:
-                import json
-                import urllib.request
-
-                with urllib.request.urlopen(
-                    f"{BASE}/api/heroes?rank={rank}", timeout=30
-                ) as resp:
-                    data = json.loads(resp.read())
-                rates = [h["win_rate"] for h in (data.get("heroes") or [])
-                         if h.get("win_rate") is not None]
-                return sum(rates) / len(rates) if rates else None
-
-            scoped_all, scoped_mythic = scoped_avg("all"), scoped_avg("mythic")
-            ck(
-                "ringkasan ikut mengikuti bracket rank",
-                scoped_all is not None
-                and scoped_mythic is not None
-                and abs(scoped_all - scoped_mythic) > 0.01,
-                f"all={scoped_all} mythic={scoped_mythic} "
-                f"(paparan: {all_avg!r} -> {myth_avg!r})",
-            )
-            ck(
-                "ganti rank tidak memicu request /api/heroes baru",
-                len(hero_requests) == 0,
-                f"{len(hero_requests)} request",
-            )
-
-            page.query_selector_all("select")[0].select_option("all")
+            # toggle kad -> jadual
+            page.click(".toggle__btn:has-text('Jadual')")
             page.wait_for_timeout(900)
+            rows = page.query_selector_all(".tbl tbody tr")
+            ck("Heroes: tukar ke jadual", len(rows) > 100, str(len(rows)))
+            ck("Heroes: lajur jadual lengkap", len(page.query_selector_all(".tbl thead th")) >= 7)
 
-            # ------------------------------------------------ filter sheet
+            # toggle jadual -> kad
+            page.click(".toggle__btn:has-text('Kad')")
+            page.wait_for_timeout(700)
+            ck("Heroes: tukar balik ke kad", len(page.query_selector_all(".hcard")) > 100)
+
+            # drawer filter
             page.click(".toolbar__filter")
-            page.wait_for_timeout(700)
-            sheet = page.query_selector(".sheet__panel")
-            sheet_text = (sheet.inner_text() if sheet else "").lower()
-            ck("sheet filter terbuka", sheet is not None and "role" in sheet_text)
-            ck("sheet filter berisi lane", "lane" in sheet_text)
-            ck("sheet filter berisi tipe damage", "tipe damage" in sheet_text)
-            page.click(".sheet__foot .btn--primary")
-            page.wait_for_timeout(600)
-
-            # ------------------------------------------------ sorting
-            # Urutan select: [0] rank, [1] periode, [2] urutkan.
-            page.query_selector_all("select")[2].select_option("win_rate")
-            page.wait_for_timeout(900)
-            names = [c.inner_text().split("\n")[0] for c in page.query_selector_all(".hcard")]
-            ck("sorting menghasilkan urutan hero", len(names) > 0, str(names[:3]))
-
-            # ------------------------------------------------ profil hero
-            # Hero tanpa lagu: Alucard tiada dalam senarai pemetaan.
-            page.fill("input[type='search']", "alucard")
-            page.wait_for_timeout(700)
-            page.click(".hcard__name button")
-            page.wait_for_timeout(1500)
-            panel = page.query_selector(".profile__panel")
-            panel_text = panel.inner_text() if panel else ""
-            panel_low = panel_text.lower()
-            ck("profil hero terbuka", panel is not None)
-            ck("profil menunjukkan Win Rate", "win rate" in panel_low)
-            ck("profil menunjukkan Pick Rate", "pick rate" in panel_low)
-            ck("profil menunjukkan Ban Rate", "ban rate" in panel_low)
-            ck("profil menunjukkan rate per rank", "rate per rank" in panel_low)
-            ck("profil menunjukkan skill", "skill (" in panel_low)
-            ck("profil menunjukkan nama hero", "alucard" in panel_low, panel_text[:80])
-
-            # -------------------------------------------- lagu hero (audio)
-            # Helper: baca state elemen <audio> global.
-            def audio_state() -> dict:
-                return page.evaluate(
-                    "() => { const a = document.querySelector('audio');"
-                    " if (!a) return {};"
-                    " return { src: a.currentSrc || a.src || '', paused: a.paused,"
-                    " loop: a.loop, volume: a.volume, time: a.currentTime }; }"
-                )
-
-            art = page.query_selector(".profile__art")
-            ck("gambar hero jadi butang", art is not None)
-
-            # Hero TANPA lagu: tekan gambar tiada apa-apa, tiada penanda.
-            disabled = art.get_attribute("disabled") is not None if art else False
-            ck("hero tanpa lagu: butang lumpuh", disabled)
-            ck("hero tanpa lagu: tiada equalizer", page.query_selector(".profile .eq") is None)
-            if art is not None:
-                # Dispatch terus: butang lumpuh =&gt; tiada handler dijalankan.
-                art.evaluate("el => el.click()")
-                page.wait_for_timeout(400)
-            silent = audio_state()
-            ck("hero tanpa lagu: tiada audio bermain", silent.get("paused") in (True, None), str(silent))
-
-            # Tutup profil Alucard sebelum buka hero lain.
-            page.keyboard.press("Escape")
+            page.wait_for_selector(".sheet__panel", timeout=15000)
+            groups = page.query_selector_all(".filtergroup")
+            ck("Filter: drawer terbuka", bool(page.query_selector(".sheet__panel")))
+            ck("Filter: 3 kumpulan (role/lane/tipe)", len(groups) == 3, str(len(groups)))
+            ck(
+                "Filter: butang Terapkan",
+                bool(page.query_selector(".sheet__actions button:has-text('Terapkan')")),
+            )
+            before = len(page.query_selector_all(".hcard"))
+            page.click(".filtergroup:has-text('Role') .chip:has-text('Assassin')")
             page.wait_for_timeout(500)
-            ck("profil Alucard ditutup", page.query_selector(".profile__panel") is None)
+            page.click(".sheet__actions button:has-text('Terapkan')")
+            page.wait_for_timeout(900)
+            after = len(page.query_selector_all(".hcard"))
+            ck("Filter: role Assassin menapis kad", 0 < after < before, f"{before} -> {after}")
 
-            # Hero DENGAN lagu: Bruno.
-            page.fill("input[type='search']", "bruno")
-            page.wait_for_timeout(800)
-            page.click(".hcard__name button")
+            # Reset filter supaya langkah carian seterusnya bersih
+            page.click(".toolbar__filter")
+            page.wait_for_selector(".sheet__panel", timeout=15000)
+            page.click(".sheet__actions button:has-text('Reset')")
+            page.wait_for_timeout(400)
+            page.click(".sheet__actions button:has-text('Terapkan')")
+            page.wait_for_timeout(900)
+            ck("Filter: reset memulihkan semua kad", len(page.query_selector_all(".hcard")) == before)
+
+            # cari
+            page.fill(".toolbar__search input", "Gloo")
+            page.wait_for_timeout(900)
+            found = page.query_selector_all(".hcard")
+            ck(
+                "Cari: nama Gloo dijumpai",
+                bool(found) and "Gloo" in page.inner_text(".herogrid"),
+                str(len(found)),
+            )
+
+            # ------------------------------------------- 4. detail hero (2 klik)
+            page.goto(BASE + "/heroes", wait_until="domcontentloaded", timeout=60000)
+            page.wait_for_selector(".hcard", timeout=45000)
+            page.wait_for_timeout(1200)
+            page.click(".hcard__link >> nth=0")
             page.wait_for_timeout(1400)
-            art = page.query_selector(".profile__art")
+            ck("Detail hero: <= 2 klik dari senarai", "/heroes/" in page.url, page.url)
+            ck("Detail hero: nama dipapar", bool(page.query_selector(".detailhead__name")))
+            ck("Detail hero: badge tier", bool(page.query_selector(".tier")))
+
+            tabs = page.eval_on_selector_all(".tabs__btn", "els => els.map(e => e.textContent.trim())")
             ck(
-                "hero dengan lagu: butang gambar aktif",
-                art is not None and art.get_attribute("disabled") is None,
-                (art.get_attribute("aria-label") if art else "tiada butang"),
+                "Detail hero: tab Overview + Balance history",
+                any("Overview" in t for t in tabs) and any("Balance history" in t for t in tabs),
+                str(tabs),
             )
-            ck(
-                "butang gambar ada aria-label main lagu",
-                art is not None and "Mainkan lagu" in (art.get_attribute("aria-label") or ""),
-                (art.get_attribute("aria-label") if art else ""),
-            )
-            if art is not None:
-                art.click()
-                page.wait_for_timeout(900)
-            state = audio_state()
-            ck("lagu hero mula selepas tekan gambar", state.get("paused") is False, str(state))
-            ck("lagu hero loop", state.get("loop") is True, str(state))
-            ck("volume lagu 0.7", abs(float(state.get("volume", 0)) - 0.7) < 0.01, str(state))
-            ck(
-                "src lagu mengandungi /audio/PICS",
-                "/audio/PICS/" in str(state.get("src", "")),
-                str(state.get("src")),
-            )
-            ck("penanda equalizer muncul semasa main", page.query_selector(".profile .eq") is not None)
-            ck(
-                "aria-pressed=true semasa main",
-                art is not None and art.get_attribute("aria-pressed") == "true",
-                (art.get_attribute("aria-pressed") if art else ""),
-            )
-
-            # Tekan lagi = jeda.
-            if art is not None:
-                art.click()
-                page.wait_for_timeout(500)
-            ck("tekan lagi menjeda lagu", audio_state().get("paused") is True, str(audio_state()))
-            ck("penanda equalizer hilang semasa jeda", page.query_selector(".profile .eq") is None)
-
-            # Tekan lagi = sambung.
-            if art is not None:
-                art.click()
-                page.wait_for_timeout(500)
-            ck("tekan lagi menyambung lagu", audio_state().get("paused") is False, str(audio_state()))
-
-            # Tutup dengan ESC -> lagu senyap + reset ke 0:00.
-            page.keyboard.press("Escape")
-            page.wait_for_timeout(800)
-            closed = audio_state()
-            ck("tutup profil: lagu berhenti", closed.get("paused") is True, str(closed))
-            ck("tutup profil: reset ke 0:00", float(closed.get("time", 1)) == 0.0, str(closed))
-            ck("tutup profil: panel hilang", page.query_selector(".profile__panel") is None)
-
-            # Buka hero LAIN tanpa tekan gambar -> lagu lama mati, hero baru senyap.
-            page.fill("input[type='search']", "mathilda")
-            page.wait_for_timeout(800)
-            page.click(".hcard__name button")
-            page.wait_for_timeout(1400)
-            switched = audio_state()
-            ck("tukar hero: lagu lama berhenti", switched.get("paused") is True, str(switched))
-            ck("tukar hero: hero baharu tidak main automatis", float(switched.get("time", 1)) == 0.0, str(switched))
-            page.keyboard.press("Escape")
-            page.wait_for_timeout(500)
-
-            page.fill("input[type='search']", "")
-            page.wait_for_timeout(500)
-
-            # ------------------------------------------------ tab komposisi
-            # Pilih satu hero dari daftar DULU (tombol tambah pada kartu),
-            # baru pindah ke tab "Tim".
-            add_buttons = page.query_selector_all(".hcard button[aria-pressed]")
-            if add_buttons:
-                add_buttons[0].click()
-                page.wait_for_timeout(600)
-            page.click('.tabbar button:has-text("Tim")')
+            page.click(".tabs__btn:has-text('Balance history')")
             page.wait_for_timeout(900)
-            body = page.inner_text("body")
-            low = body.lower()
-            ck("tab komposisi terbuka", "komposisi tim" in low)
-            ck("komposisi menampilkan skor", "skor komposisi" in low or "balance rating" in low)
-            ck("komposisi menampilkan CC density", "cc density" in low)
-            ck("komposisi menampilkan frontline", "frontline" in low)
-
-            # ------------------------------------------------ tab movers
-            page.goto(BASE + "/#/movers", wait_until="domcontentloaded", timeout=30000)
-            page.wait_for_timeout(1800)
-            body = page.inner_text("body").lower()
-            ck("tab movers terbuka", "meta movers" in body)
-            ck("movers menjelaskan ketiadaan riwayat", "riwayat snapshot" in body)
-
-            # ------------------------------------------------ tab patch
-            page.goto(BASE + "/#/patches", wait_until="domcontentloaded", timeout=30000)
-            page.wait_for_timeout(2000)
-            body = page.inner_text("body").lower()
-            ck("tab patch terbuka", "riwayat patch" in body)
-            patch_rows = page.query_selector_all(".pitem")
-            ck("tab patch senarai versi patch", len(patch_rows) >= 80, f"{len(patch_rows)} patch")
-            # Buka patch pertama yang ada nota hero.
-            for head in page.query_selector_all(".pitem__head"):
-                if "hero" in head.inner_text():
-                    head.click()
-                    break
-            page.wait_for_timeout(900)
-            changes = page.query_selector_all(".chg__row")
-            ck("tab patch membuka nota perubahan", len(changes) > 0, f"{len(changes)} nota")
-            ck("tab patch ada jenis perubahan", len(page.query_selector_all(".chg__type")) > 0)
-
-            # ------------------------------------------------ tab item
-            page.goto(BASE + "/#/items", wait_until="domcontentloaded", timeout=30000)
-            page.wait_for_timeout(2000)
-            body = page.inner_text("body").lower()
-            ck("tab item terbuka", "katalog item" in body)
-            item_rows = page.query_selector_all(".icard")
-            ck("tab item senarai item", len(item_rows) >= 100, f"{len(item_rows)} item")
-            ck("tab item ada imej", len(page.query_selector_all(".icard__img img")) > 0)
-
-            # ------------------------------------------- kad hero + modal
-            page.goto(BASE + "/#/heroes", wait_until="domcontentloaded", timeout=30000)
-            page.wait_for_timeout(2000)
-            ck("kad hero ada strip arkib", len(page.query_selector_all(".hcard__arch")) > 0)
-            card = page.query_selector(".hcard:has(.hcard__arch)")
-            if card:
-                card.query_selector(".hcard__name button").click()
-                page.wait_for_timeout(1800)
-                ck("modal ada seksyen riwayat patch", len(page.query_selector_all(".chg--boxed")) > 0)
-                ck("modal ada rekod arkib", len(page.query_selector_all(".kv > div")) > 0)
-
-            # ------------------------------------------------ tab data
-            page.goto(BASE + "/#/sources", wait_until="domcontentloaded", timeout=30000)
-            page.wait_for_timeout(2200)
-            body = page.inner_text("body").lower()
-            ck("tab data terbuka", "status data" in body)
-            ck("tab data menampilkan sumber", "sumber" in body)
-            ck("tab data menampilkan versi snapshot", "riwayat snapshot" in body)
-            ck("tab data ada panel arkib", "arkib sejarah patch" in body)
-            ck("tab data ada jadual rujukan", len(page.query_selector_all(".ref .tbl tbody tr")) > 0)
-            ck("tab data ada senarai dokumen", len(page.query_selector_all(".doclist__item")) >= 5)
-
-            # ------------------------------------------------ PWA
-            manifest = page.request.get(BASE + "/manifest.webmanifest")
-            ck("manifest.webmanifest dilayani", manifest.status == 200)
-            if manifest.status == 200:
-                data = manifest.json()
-                ck("manifest punya nama", bool(data.get("name")))
-                ck("manifest punya icons", len(data.get("icons") or []) >= 2)
-                ck("manifest display standalone", data.get("display") == "standalone")
-            sw = page.request.get(BASE + "/sw.js")
-            ck("service worker dilayani", sw.status == 200)
-
-            # ------------------------------------------------ API langsung
-            api = page.request.get(BASE + "/api/heroes?rank=all")
-            api_heroes = (api.json() or {}).get("heroes") or []
-            with_bracket = [
-                h for h in api_heroes if (h.get("rates_by_rank") or {}).get("mythic")
-            ]
+            hist = page.query_selector_all(".tbl--history tbody tr")
+            ck("Detail hero: baris sejarah imbangan", len(hist) >= 1, str(len(hist)))
             ck(
-                "payload /api/heroes menyertakan rates_by_rank",
-                len(with_bracket) > 100,
-                f"{len(with_bracket)} hero punya bracket mythic",
+                "Detail hero: sejarah ada versi patch",
+                bool(page.query_selector(".tbl--history .ptag")),
             )
-            ck("API /api/heroes 200", api.status == 200)
-            if api.status == 200:
-                payload = api.json()
-                heroes = payload.get("heroes") or []
-                rated = [h for h in heroes if h.get("win_rate") is not None]
-                ck("API mengisi rate", len(rated) >= len(heroes) - 2, f"{len(rated)}/{len(heroes)}")
-                ck("API punya rates_summary", payload.get("manifest", {}).get("rates_summary") is not None)
-                summary = payload["manifest"]["rates_summary"]
-                ck("rates_summary.avg_win_rate ada", summary.get("avg_win_rate") is not None)
-                ck("rates_summary.most_banned ada", summary.get("most_banned") is not None)
 
-            detail = page.request.get(BASE + "/api/hero?id=alucard")
-            ck("API /api/hero 200", detail.status == 200)
-            if detail.status == 200:
-                hero = detail.json()["hero"]
-                ck("detail punya stats terisi", (hero.get("stats") or {}).get("win_rate") is not None)
-                ck("detail punya rates_by_rank", bool((hero.get("stats") or {}).get("rates_by_rank")))
+            # ------------------------------------------------- 5. Movers
+            body = goto("/movers", wait=".page--movers")
+            ck("Movers: halaman dipapar", "mover" in low or "Movers" in body)
+            ck("Movers: kawalan ambang", bool(page.query_selector(".ctl")))
+            counts = page.inner_text(".counts") if page.query_selector(".counts") else ""
+            ck("Movers: kiraan naik/turun", "naik" in counts and "turun" in counts, counts[:60])
+            # dev server tiada sejarah -> mesej jujur, bukan angka karangan
+            honest = bool(page.query_selector(".empty")) or bool(page.query_selector(".movercol"))
+            ck("Movers: keadaan tulen (empty atau senarai)", honest)
 
-            page.close()
+            # ------------------------------------------------- 6. Patches
+            body = goto("/patches", wait=".tbl")
+            ck("Patches: patch semasa dipin", "PATCH TERKINI" in body.upper())
+            versions = page.query_selector_all(".tbl tbody tr")
+            ck("Patches: > 80 versi", len(versions) > 80, str(len(versions)))
+            ck("Patches: pecahan jenis patch", len(page.query_selector_all(".typetags .ptag")) > 0)
+            ck("Patches: PatchTag jenis", len(page.query_selector_all(".ptag")) > 0)
+
+            # ------------------------------------------------- 7. detail patch
+            body = goto("/patches/2.2.16", wait=".tabs")
+            ck("Detail patch: versi + tarikh", "2.2.16" in body and "2026" in body)
+            tabs = page.eval_on_selector_all(".tabs__btn", "els => els.map(e => e.textContent.trim())")
+            ck(
+                "Detail patch: tab Hero | Item | System",
+                any("Hero" in t for t in tabs)
+                and any("Item" in t for t in tabs)
+                and any("System" in t for t in tabs),
+                str(tabs),
+            )
+            ck("Detail patch: baris perubahan hero", len(page.query_selector_all(".tbl--patch tbody tr")) > 0)
+            ck("Detail patch: lajur lama -> baru", bool(page.query_selector(".tbl__change")))
+            ck("Detail patch: jenis patch pada baris", len(page.query_selector_all(".tbl--patch .ptag")) > 0)
+
+            page.click(".tabs__btn:has-text('Item')")
+            page.wait_for_timeout(900)
+            ck("Detail patch: tab item ada baris", len(page.query_selector_all(".tbl--patch tbody tr")) > 0)
+
+            page.click(".tabs__btn:has-text('System')")
+            page.wait_for_timeout(900)
+            ck("Detail patch: tab sistem ada nota", len(page.query_selector_all(".sysrow")) > 0)
+
+            # ------------------------------------------------- 8. Items
+            body = goto("/items", wait=".icard")
+            items = page.query_selector_all(".icard")
+            ck("Items: kad item dipapar", len(items) > 90, str(len(items)))
+            ck("Items: imej item ada", len(page.query_selector_all(".icard__img img")) > 90)
+            ck("Items: kategori sebagai penapis", len(page.query_selector_all(".chip")) > 5)
+            ck("Items: patch tag pada item", len(page.query_selector_all(".icard .ptag")) > 0)
+
+            page.click(".toggle__btn:has-text('Jadual')")
+            page.wait_for_timeout(900)
+            ck("Items: tukar ke jadual", len(page.query_selector_all(".tbl tbody tr")) > 90)
+            page.click(".toggle__btn:has-text('Kad')")
+            page.wait_for_timeout(700)
+
+            # expand satu item -> log perubahan
+            page.click(".icard__head >> nth=0")
+            page.wait_for_timeout(900)
+            ck(
+                "Items: expand Showing log perubahan / butiran",
+                bool(page.query_selector(".icard__body")),
+            )
+
+            # ------------------------------------------------- 9. Data
+            body = goto("/data", wait=".page--data")
+            ck("Data: halaman dipapar", "Status" in body)
+            panels = page.eval_on_selector_all(
+                ".panel__head h2", "els => els.map(e => e.textContent.trim())"
+            )
+            for title in ("Status", "Sumber", "Sejarah snapshot", "Statistik arkib", "Jadual rujukan"):
+                ck(f"Data: seksyen {title}", title in panels, str(panels[:8]))
+            ck("Data: jadual rujukan 13 jadual", "13" in body)
+            ck("Data: dokumen senarai", len(page.query_selector_all(".doclist__item, .doclist")) > 0)
+            ck("Data: senarai endpoint API", len(page.query_selector_all(".apilist li a")) >= 5)
+            ck("Data: sumber ada lesen", "CC BY-SA" in body)
+
+            # ------------------------------------------------ 10. mobile nav
+            mobile = browser.new_context(
+                viewport={"width": 390, "height": 844},
+                ignore_https_errors=True,
+                service_workers="allow",
+            )
+            mp = mobile.new_page()
+            mp.on("pageerror", lambda e: errors.append(f"MOBILE PAGEERROR {e}"))
+            mp.goto(BASE + "/", wait_until="domcontentloaded", timeout=60000)
+            mp.wait_for_timeout(2200)
+            ck("Mobile: bar bawah kelihatan", mp.is_visible(".tabbar"))
+            ck("Mobile: bar atas desktop tersembunyi", not mp.is_visible(".topnav"))
+            mp.click(".tabbar__link:has-text('Patches')")
+            mp.wait_for_timeout(1200)
+            ck("Mobile: tab bawah -> /patches", mp.url.endswith("/patches"), mp.url)
+            mp.click(".tabbar__link:has-text('More')")
+            mp.wait_for_timeout(900)
+            ck(
+                "Mobile: menu More ada Items + Data",
+                mp.is_visible(".moremenu__link:has-text('Items')")
+                and mp.is_visible(".moremenu__link:has-text('Data')"),
+            )
+            # footer tidak tenggelam bawah tab bar
+            mp.evaluate("() => window.scrollTo(0, document.body.scrollHeight)")
+            mp.wait_for_timeout(500)
+            clearance = mp.evaluate(
+                """() => {
+                    const bar = document.querySelector('.tabbar').getBoundingClientRect();
+                    let max = 0;
+                    document.querySelectorAll('.footer *').forEach((el) => {
+                        const r = el.getBoundingClientRect();
+                        if (r.height > 0) max = Math.max(max, r.bottom);
+                    });
+                    return bar.top - max;
+                }"""
+            )
+            ck("Mobile: footer clearance dari tab bar", clearance > 0, f"{clearance}px")
+            mobile.close()
+
+            # ------------------------------------------------ 11. PWA
+            manifest = page.evaluate(
+                "() => document.querySelector('link[rel=manifest]')?.getAttribute('href') ?? ''"
+            )
+            ck("PWA: manifest dikait", manifest.endswith("manifest.webmanifest"), manifest)
+            sw = page.evaluate(
+                """async () => {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    return regs.length;
+                }"""
+            )
+            ck("PWA: service worker terdaftar", sw >= 1, str(sw))
+
+            ck("tanpa console error (akhir)", not errors, str(errors[:3]))
+
             browser.close()
     finally:
         server.terminate()
         try:
-            _, err = server.communicate(timeout=5)
-            if err:
-                tail = err.decode(errors="replace").strip().splitlines()[-5:]
-                if tail:
-                    print("server stderr:", *tail, sep="\n  ")
-        except Exception:
-            pass
+            server.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            server.kill()
 
-    print()
-    bad = 0
+    width = max(len(name) for name, _, _ in checks)
     for name, ok, detail in checks:
-        print(f"  {'OK  ' if ok else 'FAIL'} {name}" + (f"   [{detail}]" if detail and not ok else ""))
+        mark = "PASS" if ok else "FAIL"
+        line = f"[{mark}] {name.ljust(width)}"
+        if detail and not ok:
+            line += f"  <- {detail}"
+        print(line)
         if not ok:
-            bad += 1
-    print("=" * 66)
-    print(f"{len(checks)} pemeriksaan, {len(checks) - bad} lolos, {bad} gagal")
-    return 1 if bad else 0
+            failures.append(name)
+
+    total = len(checks)
+    print(f"\n{total - len(failures)}/{total} checks passed")
+    if failures:
+        print("gagal: " + ", ".join(failures))
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

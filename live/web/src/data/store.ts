@@ -1,13 +1,13 @@
 /**
  * Store global (Zustand).
  *
- * Dipisah jadi dua:
- *   - `useMetaStore`: state meta (filter, sorting, window, tab).
- *   - `useLocalStore`: state yang HARUS bertahan di localStorage
- *     (favorit + catatan hero).
+ * Satu store sahaja: keadaan meta yang dikongsi semua halaman - filter
+ * rank/periode/urutan, carian, dan filter role/lane/tipe damage.
+ *
+ * Status pemuatan data live berada dalam `data/AlmanacContext` (bukan di
+ * sini) kerana ia diambil sekali dan dikongsi, bukan satu state per paparan.
  */
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 import { applyRankScope } from './client';
 import type { HeroDelta, RatesSummary, SlimHero } from './client';
@@ -51,10 +51,12 @@ export const SORT_OPTIONS: SortOption[] = [
   { value: 'patch_changes', label: 'Nota Patch' },
 ];
 
-export type View = 'heroes' | 'composition' | 'movers' | 'patches' | 'items' | 'sources';
+/** Paparan senarai hero: kad atau jadual. */
+export type HeroViewMode = 'cards' | 'table';
 
 export interface MetaState {
-  view: View;
+  /** Kad atau jadual - hanya digunakan di /heroes. */
+  heroView: HeroViewMode;
   rank: string;
   window: string;
   sort: SortKey;
@@ -65,9 +67,7 @@ export interface MetaState {
   damageTypes: string[];
   /** Ambang delta (poin) untuk ditandai Rising/Falling. */
   moverThreshold: number;
-  /** Hero yang dipilih untuk analyzer komposisi tim (maks 5). */
-  composition: string[];
-  setView: (view: View) => void;
+  setHeroView: (view: HeroViewMode) => void;
   setRank: (rank: string) => void;
   setWindow: (value: string) => void;
   setSort: (sort: SortKey) => void;
@@ -78,12 +78,10 @@ export interface MetaState {
   toggleDamageType: (value: string) => void;
   clearFilters: () => void;
   setMoverThreshold: (value: number) => void;
-  toggleComposition: (heroId: string) => void;
-  clearComposition: () => void;
 }
 
 export const useMetaStore = create<MetaState>((set) => ({
-  view: 'heroes',
+  heroView: 'cards',
   rank: 'all',
   window: '7d',
   sort: 'tier_score',
@@ -93,10 +91,9 @@ export const useMetaStore = create<MetaState>((set) => ({
   lanes: [],
   damageTypes: [],
   moverThreshold: 0.5,
-  composition: [],
-  setView: (view) => set({ view }),
+  setHeroView: (heroView) => set({ heroView }),
   setRank: (rank) => set({ rank }),
-  setWindow: (value) => set({ window: value }),
+  setWindow: (window) => set({ window }),
   setSort: (sort) => set((state) => ({ sort, desc: state.sort === sort ? !state.desc : true })),
   toggleSortDirection: () => set((state) => ({ desc: !state.desc })),
   setQuery: (query) => set({ query }),
@@ -119,59 +116,8 @@ export const useMetaStore = create<MetaState>((set) => ({
         : [...state.damageTypes, value],
     })),
   clearFilters: () => set({ roles: [], lanes: [], damageTypes: [], query: '' }),
-  setMoverThreshold: (value) => set({ moverThreshold: value }),
-  toggleComposition: (heroId) =>
-    set((state) => ({
-      composition:
-        state.composition.includes(heroId)
-          ? state.composition.filter((id) => id !== heroId)
-          : state.composition.length >= 5
-            ? state.composition
-            : [...state.composition, heroId],
-    })),
-  clearComposition: () => set({ composition: [] }),
+  setMoverThreshold: (moverThreshold) => set({ moverThreshold }),
 }));
-
-export interface LocalState {
-  favorites: string[];
-  notes: Record<string, string>;
-  toggleFavorite: (heroId: string) => void;
-  setNote: (heroId: string, note: string) => void;
-  clearNote: (heroId: string) => void;
-}
-
-/**
- * Persistensi lokal. `zustand/middleware` persist memakai localStorage,
- * jadi favorit dan catatan tetap ada setelah reload - dan tidak pernah
- * dikirim ke server.
- */
-export const useLocalStore = create<LocalState>()(
-  persist(
-    (set) => ({
-      favorites: [],
-      notes: {},
-      toggleFavorite: (heroId) =>
-        set((state) => ({
-          favorites: state.favorites.includes(heroId)
-            ? state.favorites.filter((id) => id !== heroId)
-            : [...state.favorites, heroId],
-        })),
-      setNote: (heroId, note) =>
-        set((state) => ({ notes: { ...state.notes, [heroId]: note } })),
-      clearNote: (heroId) =>
-        set((state) => {
-          const next = { ...state.notes };
-          delete next[heroId];
-          return { notes: next };
-        }),
-    }),
-    {
-      name: 'mlbb-meta-local',
-      version: 1,
-      partialize: (state) => ({ favorites: state.favorites, notes: state.notes }),
-    }
-  )
-);
 
 // --------------------------------------------------------------- selectors
 
@@ -263,7 +209,7 @@ export function selectHeroes(input: FilterInput): FilteredHero[] {
   return out;
 }
 
-/** Ringkasan untuk strip statistik di kepala halaman. */
+/** Ringkasan untuk KPI di halaman Meta. */
 export function summarize(heroes: SlimHero[], summary: RatesSummary | null, rank = 'all') {
   // Ringkasan DIHITUNG ULANG di client untuk bracket yang dipilih. Kalau
   // summary dari server (yang selalu scope "all") dipakai untuk bracket

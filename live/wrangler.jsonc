@@ -22,7 +22,11 @@
     // Route /audio/* dihantar ke Worker dulu supaya boleh pulangkan 206 +
     // Content-Range (Workers Static Assets sahaja hantar 200 penuh, dan
     // Safari/iOS perlukan Range untuk main media).
-    "run_worker_first": ["/audio/*"]
+    // /api/* juga: Worker yang controlling respons JSON, bukan index.html.
+    "run_worker_first": ["/audio/*", "/api/*"],
+    // SPA: laluan seperti /heroes atau /patches/2.2.16 tiada fail statik -
+    // layan index.html supaya router di client boleh membuka halaman.
+    "not_found_handling": "single-page-application"
   },
   "observability": {
     "enabled": true,

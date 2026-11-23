@@ -76,6 +76,23 @@ def clean(value: str | None) -> str:
     return (value or "").strip()
 
 
+def split_old_new(detail: str) -> tuple[str, str]:
+    """Cari pasangan nilai lama -> baru dalam satu perubahan.
+
+    Format detail mengandungi "lama >> baru" (contoh "Base AS 0.88 >> 1").
+    Detail dipisah pada koma dulu supaya pasangan pertama yang jumpa
+    kekal pendek - bukan keseluruhan ayat.
+    """
+    for segment in (detail or "").split(", "):
+        if ">>" in segment:
+            left, _, right = segment.partition(">>")
+            old = left.strip(" .;:")
+            new = right.strip(" .;:")
+            if old and new:
+                return old, new
+    return "", ""
+
+
 def version_key(version: str) -> tuple:
     """Urutkan versi patch secara numerik: 2.2.16 > 2.2.9, bukan rentetan."""
     parts = re.findall(r"\d+", version or "")
@@ -198,14 +215,21 @@ def build() -> int:
     hero_rows = read_csv(ARCHIVE / "hero_master.csv")
     item_rows = read_csv(ARCHIVE / "items_master.csv")
 
-    hero_changes = [
-        {col: clean(row.get(col)) for col in HERO_CHANGE_COLUMNS}
-        for row in hero_change_rows
-    ]
-    item_changes = [
-        {col: clean(row.get(col)) for col in ITEM_CHANGE_COLUMNS}
-        for row in item_change_rows
-    ]
+    hero_changes = []
+    for row in hero_change_rows:
+        entry = {col: clean(row.get(col)) for col in HERO_CHANGE_COLUMNS}
+        old, new = split_old_new(entry["detail"])
+        entry["old_value"] = old
+        entry["new_value"] = new
+        hero_changes.append(entry)
+
+    item_changes = []
+    for row in item_change_rows:
+        entry = {col: clean(row.get(col)) for col in ITEM_CHANGE_COLUMNS}
+        old, new = split_old_new(entry["detail"])
+        entry["old_value"] = old
+        entry["new_value"] = new
+        item_changes.append(entry)
 
     hero_by_version: dict[str, list[dict]] = {}
     for change in hero_changes:
@@ -217,13 +241,23 @@ def build() -> int:
     patches = []
     for row in patch_rows:
         version = clean(row.get("version"))
+        heroes_here = hero_by_version.get(version, [])
+        items_here = item_by_version.get(version, [])
+        breakdown: dict[str, int] = {}
+        for change in heroes_here:
+            kind = change["change_type"] or "Other"
+            breakdown[kind] = breakdown.get(kind, 0) + 1
+        for change in items_here:
+            kind = change["change_type"] or "Other"
+            breakdown[kind] = breakdown.get(kind, 0) + 1
         patches.append(
             {
                 "version": version,
                 "date": clean(row.get("date")),
                 "source": clean(row.get("source")),
-                "hero_change_count": len(hero_by_version.get(version, [])),
-                "item_change_count": len(item_by_version.get(version, [])),
+                "hero_change_count": len(heroes_here),
+                "item_change_count": len(items_here),
+                "types": [{"type": k, "count": v} for k, v in sorted(breakdown.items())],
             }
         )
     patches.sort(key=lambda p: version_key(p["version"]))
@@ -280,6 +314,36 @@ def build() -> int:
         )
     items.sort(key=lambda i: i["item"].lower())
 
+    # ------------------------------------------------------------ systems
+    # Baris sistem yangperiod_or_version bermula dengan nombor versi patch
+    # boleh diikat ke patch tertentu (contoh "1.6.50 (2022-01-26)").
+    systems = []
+    version_pattern = re.compile(r"^\s*(\d+\.\d+(?:\.\d+)?)")
+    for row in read_csv(ARCHIVE / "systems.csv"):
+        raw_period = clean(row.get("period_or_version"))
+        match = version_pattern.match(raw_period)
+        if not match:
+            continue
+        systems.append(
+            {
+                "version": match.group(1),
+                "period": raw_period,
+                "system": clean(row.get("system")),
+                "aspect": clean(row.get("aspect")),
+                "detail": clean(row.get("detail")),
+                "source": clean(row.get("source")),
+            }
+        )
+
+    # ------------------------------------------------------------- season
+    season: dict[str, object] = {}
+    season_path = ARCHIVE / "updates" / "season_status.json"
+    if season_path.exists():
+        try:
+            season = json.loads(season_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            season = {}
+
     # ----------------------------------------------------------- reference
     tables = []
     ref_dir = ARCHIVE / "references"
@@ -333,6 +397,7 @@ def build() -> int:
             "items": len(items),
             "reference_tables": len(tables),
             "documents": len(docs),
+            "systems": len(systems),
             "images": image_stats["copied"],
         },
     }
@@ -346,7 +411,16 @@ def build() -> int:
         print(f"  {path.relative_to(ROOT)}  ({path.stat().st_size // 1024} KB)")
 
     print("Menjana aset arkib:")
-    write("core.json", {"manifest": manifest, "patches": patches, "hero_changes": hero_changes, "item_changes": item_changes, "heroes": heroes, "items": items})
+    write("core.json", {
+        "manifest": manifest,
+        "season": season,
+        "patches": patches,
+        "hero_changes": hero_changes,
+        "item_changes": item_changes,
+        "systems": systems,
+        "heroes": heroes,
+        "items": items,
+    })
     write("reference.json", {"manifest": manifest, "tables": tables})
     write("docs.json", {"manifest": manifest, "docs": docs})
 
@@ -357,7 +431,7 @@ def build() -> int:
         "  kandungan: "
         f"{len(patches)} patch, {len(hero_changes)} perubahan hero, "
         f"{len(item_changes)} perubahan item, {len(heroes)} hero, {len(items)} item, "
-        f"{len(tables)} jadual referensi, {len(docs)} dokumen"
+        f"{len(tables)} jadual referensi, {len(docs)} dokumen, {len(systems)} nota sistem"
     )
     return 0
 

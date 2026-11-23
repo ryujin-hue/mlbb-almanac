@@ -26,6 +26,7 @@ export interface ArchiveManifest {
     items: number;
     reference_tables: number;
     documents: number;
+    systems: number;
     images: number;
   };
 }
@@ -36,6 +37,23 @@ export interface ArchivePatch {
   source: string;
   hero_change_count: number;
   item_change_count: number;
+  /** Pecahan jenis perubahan dalam patch ini (contoh: Buff x5, Rework x2). */
+  types: { type: string; count: number }[];
+}
+
+export interface ArchiveSystemNote {
+  version: string;
+  period: string;
+  system: string;
+  aspect: string;
+  detail: string;
+  source: string;
+}
+
+export interface ArchiveSeason {
+  season?: number;
+  end_date?: string;
+  latest_patch?: string;
 }
 
 export interface ArchiveHeroChange {
@@ -45,6 +63,9 @@ export interface ArchiveHeroChange {
   change_type: string;
   detail: string;
   source: string;
+  /** Nilai lama bila ada format "lama >> baru". */
+  old_value: string;
+  new_value: string;
 }
 
 export interface ArchiveItemChange {
@@ -54,6 +75,8 @@ export interface ArchiveItemChange {
   change_type: string;
   detail: string;
   source: string;
+  old_value: string;
+  new_value: string;
 }
 
 export interface ArchiveHero {
@@ -89,6 +112,8 @@ export interface ArchiveItem {
 
 export interface ArchiveCore {
   manifest: ArchiveManifest;
+  season: ArchiveSeason;
+  systems: ArchiveSystemNote[];
   patches: ArchivePatch[];
   hero_changes: ArchiveHeroChange[];
   item_changes: ArchiveItemChange[];
@@ -143,6 +168,8 @@ export interface ArchiveIndex {
   itemChangesByItem: Map<string, ArchiveItemChange[]>;
   /** Perubahan mengikut versi patch (hero + item). */
   changesByVersion: Map<string, { heroes: ArchiveHeroChange[]; items: ArchiveItemChange[] }>;
+  /** Nota sistem (emblem, spell, dsb) mengikut versi patch. */
+  systemsByVersion: Map<string, ArchiveSystemNote[]>;
 }
 
 /** Susun versi patch secara numerik: 2.2.16 > 2.2.9 (bukan rentetan). */
@@ -200,12 +227,20 @@ export function indexArchive(core: ArchiveCore): ArchiveIndex {
   for (const change of core.hero_changes) bucketFor(change.version).heroes.push(change);
   for (const change of core.item_changes) bucketFor(change.version).items.push(change);
 
+  const systemsByVersion = new Map<string, ArchiveSystemNote[]>();
+  for (const note of core.systems) {
+    const bucket = systemsByVersion.get(note.version);
+    if (bucket) bucket.push(note);
+    else systemsByVersion.set(note.version, [note]);
+  }
+
   return {
     core,
     heroByName,
     heroChangesByHero,
     itemChangesByItem,
     changesByVersion,
+    systemsByVersion,
   };
 }
 

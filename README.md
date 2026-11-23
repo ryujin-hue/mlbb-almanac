@@ -32,16 +32,23 @@ shows today's numbers *and* every buff and nerf it has been through.
 | **Worker** (API + KV) | <https://mlbb-data-workflow.mlvv.workers.dev> |
 | **Archive API** | 78 REST endpoints — run locally, see `archive/API.md` |
 
-### The six tabs
+### The routes
 
-| Tab | What it answers |
+`/` is the Meta overview — the page you land on. Everything else hangs off the
+same six destinations, in the top bar on desktop and the bottom bar on mobile.
+
+| Route | What it answers |
 |---|---|
-| **Hero** | Who is strong right now — rates, tier, trend. Each card also carries the hero's last patch note. |
-| **Tim** | Team composition analysis across roles, lanes and damage types. |
-| **Movers** | Who moved in the last 1 / 7 / 30 days. |
-| **Patch** | Every patch version since 2016. Open one to read what changed in that patch — per hero and per item. |
-| **Item** | The 104-item shop: category, gold cost, build path, unique passive, and the change log for each item. |
-| **Data** | Live dataset status and snapshot history, plus the archive: 13 reference tables and 5 documents (glossary, master timeline, meta history, academy summary, research report). |
+| `/` **Meta** | Where the game stands right now: current patch, four headline numbers, win rate per role, who rose and fell, and the latest balance notes. |
+| `/heroes` **Heroes** | Who is strong right now — rates, tier, trend, last patch note. Cards or a sortable table; filters for role, lane and damage type. |
+| `/heroes/<hero>` | One hero: rates, tier, roles, and every balance note the archive has for them. |
+| `/movers` **Movers** | Who moved in the last 1 / 7 / 30 days, with a settable delta threshold. |
+| `/patches` **Patches** | Every patch version since 2016, with a per-patch breakdown of what kind of change it carried. |
+| `/patches/<version>` | One patch: what changed, per hero and per item, with the old value next to the new one. |
+| `/items` **Items** | The 104-item shop: category, gold cost, build path, unique passive, and the change log for each item. |
+| `/data` **Data** | Live dataset status and snapshot history, plus the archive: 13 reference tables and 5 documents (glossary, master timeline, meta history, academy summary, research report). |
+
+Routing is by path, not by hash, so every page has its own URL.
 
 ## Layout
 
@@ -59,7 +66,7 @@ live/               Worker + web app  (was mlbb-data-workflow)
   worker/           Cloudflare Worker: KV, 02:00 UTC cron, the API
   pages/            Pages Functions - proxies /api/* and /audio/* to the Worker
   tools/            dev-server.mjs (mock API), build_archive.py (archive -> JSON)
-  tests/            smoke_test_v2.py (88 checks), production_check.py (29 checks)
+  tests/            smoke_test_v2.py (78 checks), production_check.py (live probe)
 
 packages/shared/    Code shared by worker and web (tier maths, types)
 docs/               Brand identity, architecture notes
@@ -109,8 +116,8 @@ cd ../archive && python3 -m pytest tests/ -q                           # archive
 | Workflow | When | What |
 |---|---|---|
 | `auto-update` | cron 18:00 UTC | refresh the archive datasets, commit `[auto-update]` |
-| `QA Site` | every push | worker unit tests, typecheck, build, 88-check smoke test |
-| `QA Production` | cron 03:00 UTC | 29-check probe against both live URLs |
+| `QA Site` | every push | worker unit tests, typecheck, build, 78-check smoke test |
+| `QA Production` | cron 03:00 UTC | probe against both live URLs |
 | `Deploy Pages` | push | `live/` -> Cloudflare Pages |
 | `Deploy Worker + Site` | push | `live/worker` -> Cloudflare Workers |
 

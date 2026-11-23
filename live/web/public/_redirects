@@ -1,1 +1,6 @@
 /index.html  /  308
+
+# SPA: semua laluan aplikasi (/heroes, /patches/2.2.16, ...) dilayani
+# oleh index.html. Aset statik (/assets/*, /archive/*) tetap dilayani
+# dahulu - Pages semak fail statik sebelum _redirects.
+/*  /index.html  200

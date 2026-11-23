@@ -181,14 +181,15 @@ const server = createServer(async (req, res) => {
     }
 
     if (pathname === '/api/snapshots') {
-      const { storedAt, version } = await loadDataset();
+      // Bentuk sama seperti Worker: counts mengikut dataset sebenar, bukan 0.
+      const { storedAt, version, payload } = await loadDataset();
       return json(res, {
         entries: [
           {
             version,
             measured_at_utc: version,
             stored_at: storedAt,
-            counts: { heroes: 0, counter_edges: 0, items: 0, rated_heroes: 0 },
+            counts: payload.manifest.counts,
           },
         ],
       });
