@@ -10,9 +10,10 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --import ./tests/register-ts.mjs --test tests/*.test.ts",
     "build:web": "npm --prefix ../web install --no-audit --no-fund && npm --prefix ../web run build",
-    "predeploy": "npm run build:web",
+    "predeploy": "npm run build:web && npm run clean:redirects",
     "snapshot": "node --experimental-strip-types --import ./tests/register-ts.mjs ../tools/snapshot-static.mjs",
-    "dev:mock": "node --experimental-strip-types --import ./tests/register-ts.mjs ../tools/dev-server.mjs"
+    "dev:mock": "node --experimental-strip-types --import ./tests/register-ts.mjs ../tools/dev-server.mjs",
+    "clean:redirects": "node -e \"require('node:fs').rmSync('../site/_redirects',{force:true})\""
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261022.1",

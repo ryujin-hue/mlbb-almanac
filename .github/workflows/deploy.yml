@@ -57,6 +57,19 @@ jobs:
           npm ci --no-audit --no-fund
           npm run build
 
+      # Workers Static Assets tidak perlukan _redirects: SPA dilayan oleh
+      # `assets.not_found_handling = single-page-application` dalam
+      # live/wrangler.jsonc. Malah, fail itu ditolak validator Worker -
+      # peraturan tangkapan `/*  /index.html  200` dikira gelung tak hingga
+      # (code 100324), kerana ia.match juga /index.html itu sendiri.
+      # _redirects kekal dalam site/ untuk Cloudflare Pages (fail berbeza).
+      - name: Buang _redirects untuk deploy Worker
+        working-directory: live
+        run: |
+          rm -f site/_redirects
+          test ! -f site/_redirects || { echo "gagal buang _redirects"; exit 1; }
+          echo "Worker guna not_found_handling, bukan _redirects."
+
       - name: Semak secret Cloudflare
         id: secret
         run: |
