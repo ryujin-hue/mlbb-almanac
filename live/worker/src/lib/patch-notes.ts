@@ -16,7 +16,7 @@ const UA =
 
 // Versi kunci:_naik apabila bentuk atau URL imej berubah supaya cache
 // lama tidak bercampur.
-export const PATCH_NOTES_KEY = 'mlbb:patch-notes:v2:latest';
+export const PATCH_NOTES_KEY = 'mlbb:patch-notes:v3:latest';
 export const PATCH_NOTES_MAX_AGE_SECONDS = 60 * 60 * 12;
 
 /** Versi patch: 2.1.70, 2.2.16a, 1.9.90 */
