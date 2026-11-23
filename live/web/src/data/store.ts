@@ -1,14 +1,10 @@
 /**
- * Store global (Zustand).
+ * Helper tulen untuk senarai hero.
  *
- * Satu store sahaja: keadaan meta yang dikongsi semua halaman - filter
- * rank/periode/urutan, carian, dan filter role/lane/tipe damage.
- *
- * Status pemuatan data live berada dalam `data/AlmanacContext` (bukan di
- * sini) kerana ia diambil sekali dan dikongsi, bukan satu state per paparan.
+ * Tiada state global: keadaan filter kini hidup dalam URL (lihat
+ * `data/useHeroFilters`), jadi setiap paparan boleh dikongsi dan butang
+ * "kembali" pelayar berfungsi seperti biasa.
  */
-import { create } from 'zustand';
-
 import { applyRankScope } from './client';
 import type { HeroDelta, RatesSummary, SlimHero } from './client';
 
@@ -53,71 +49,6 @@ export const SORT_OPTIONS: SortOption[] = [
 
 /** Paparan senarai hero: kad atau jadual. */
 export type HeroViewMode = 'cards' | 'table';
-
-export interface MetaState {
-  /** Kad atau jadual - hanya digunakan di /heroes. */
-  heroView: HeroViewMode;
-  rank: string;
-  window: string;
-  sort: SortKey;
-  desc: boolean;
-  query: string;
-  roles: string[];
-  lanes: string[];
-  damageTypes: string[];
-  /** Ambang delta (poin) untuk ditandai Rising/Falling. */
-  moverThreshold: number;
-  setHeroView: (view: HeroViewMode) => void;
-  setRank: (rank: string) => void;
-  setWindow: (value: string) => void;
-  setSort: (sort: SortKey) => void;
-  toggleSortDirection: () => void;
-  setQuery: (query: string) => void;
-  toggleRole: (role: string) => void;
-  toggleLane: (lane: string) => void;
-  toggleDamageType: (value: string) => void;
-  clearFilters: () => void;
-  setMoverThreshold: (value: number) => void;
-}
-
-export const useMetaStore = create<MetaState>((set) => ({
-  heroView: 'cards',
-  rank: 'all',
-  window: '7d',
-  sort: 'tier_score',
-  desc: true,
-  query: '',
-  roles: [],
-  lanes: [],
-  damageTypes: [],
-  moverThreshold: 0.5,
-  setHeroView: (heroView) => set({ heroView }),
-  setRank: (rank) => set({ rank }),
-  setWindow: (window) => set({ window }),
-  setSort: (sort) => set((state) => ({ sort, desc: state.sort === sort ? !state.desc : true })),
-  toggleSortDirection: () => set((state) => ({ desc: !state.desc })),
-  setQuery: (query) => set({ query }),
-  toggleRole: (role) =>
-    set((state) => ({
-      roles: state.roles.includes(role)
-        ? state.roles.filter((r) => r !== role)
-        : [...state.roles, role],
-    })),
-  toggleLane: (lane) =>
-    set((state) => ({
-      lanes: state.lanes.includes(lane)
-        ? state.lanes.filter((l) => l !== lane)
-        : [...state.lanes, lane],
-    })),
-  toggleDamageType: (value) =>
-    set((state) => ({
-      damageTypes: state.damageTypes.includes(value)
-        ? state.damageTypes.filter((d) => d !== value)
-        : [...state.damageTypes, value],
-    })),
-  clearFilters: () => set({ roles: [], lanes: [], damageTypes: [], query: '' }),
-  setMoverThreshold: (moverThreshold) => set({ moverThreshold }),
-}));
 
 // --------------------------------------------------------------- selectors
 

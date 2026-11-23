@@ -195,6 +195,33 @@ const server = createServer(async (req, res) => {
       });
     }
 
+    // Patch notes MLBB Hub - dev server tidak menarik mlbbhub.com, jadi
+    // bentuk jawapan mengekalkan bentuk sebenar (available, articles).
+    if (pathname === '/api/patch-notes') {
+      return json(res, {
+        available: true,
+        source: 'MLBB Hub (mlbbhub.com)',
+        source_url: 'https://mlbbhub.com/news/',
+        fetched_at: new Date().toISOString(),
+        count: 0,
+        articles: [],
+      });
+    }
+
+    // Turnamen PandaScore - tanpa token, jawapan jujur dengan sebab.
+    if (pathname === '/api/tournaments') {
+      return json(res, {
+        available: false,
+        source: 'PandaScore',
+        source_url: 'https://api.pandascore.co/mlbb/tournaments/upcoming',
+        fetched_at: new Date().toISOString(),
+        count: 0,
+        tournaments: [],
+        reason: 'no_token',
+        message: 'Token PandaScore belum ditetapkan (secret PANDASCORE_API_TOKEN).',
+      });
+    }
+
     if (pathname === '/api/meta') {
       const { payload, storedAt } = await loadDataset();
       return json(res, {

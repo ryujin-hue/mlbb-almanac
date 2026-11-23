@@ -126,6 +126,8 @@ export const API = {
   deltas: (window: string) => `/api/deltas?window=${encodeURIComponent(window)}`,
   snapshots: () => '/api/snapshots',
   meta: () => '/api/meta',
+  patchNotes: () => '/api/patch-notes',
+  tournaments: () => '/api/tournaments',
 } as const;
 
 // ------------------------------------------------------------------ memory

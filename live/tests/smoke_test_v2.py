@@ -110,11 +110,12 @@ def main() -> int:
                 page.wait_for_timeout(settle)
                 return page.inner_text("body")
 
-            # ------------------------------------------------------- 1. Meta
-            body = goto("/", wait=".statusstrip")
+            # ------------------------------------------------------- 1. Landing
+            body = goto("/", wait=".hcard")
             low = body.lower()
 
             ck("landing status 200", page.url.endswith("/") or page.url.endswith(":5178/"))
+            ck("landing ialah senarai hero", len(page.query_selector_all(".hcard")) > 100)
             ck("tanpa console error", not errors, str(errors[:2]))
             ck(
                 "judul aplikasi MLBB Almanac",
@@ -127,13 +128,21 @@ def main() -> int:
                 ".topnav__link", "els => els.map(e => e.textContent.trim())"
             )
             ck(
-                "navigasi atas: 6 item",
-                len(nav_links) == 6,
+                "navigasi atas: 7 item",
+                len(nav_links) == 7,
                 str(nav_links),
             )
             ck(
-                "navigasi atas label betul",
-                nav_links == ["Meta", "Heroes", "Movers", "Patches", "Items", "Data"],
+                "navigasi atas: Heroes dulu, Meta kemudian",
+                nav_links == [
+                    "Heroes",
+                    "Meta",
+                    "Movers",
+                    "Patches",
+                    "Patch Notes",
+                    "Items",
+                    "Data",
+                ],
                 str(nav_links),
             )
             ck(
@@ -141,12 +150,15 @@ def main() -> int:
                 len(page.query_selector_all(".tabbar__link")) == 5,
             )
 
+            # Halaman Meta kini di /meta (landing ialah Heroes).
+            body = goto("/meta", wait=".statusstrip")
             ck("Meta: strip status patch", bool(page.query_selector(".statusstrip__patch")))
             ck("Meta: KPI 4 statistik", len(page.query_selector_all(".kpirow .stat")) == 4)
             ck("Meta: bar win rate ikut role", len(page.query_selector_all(".rolebar")) >= 4)
             ck("Meta: lajur naik & turun", len(page.query_selector_all(".metacols .panel")) == 2)
             ck("Meta: senarai balance terakhir", len(page.query_selector_all(".balancerow")) >= 1)
             ck("Meta: patch semasa dipapar", "2.2.23" in body, "2.2.23")
+            ck("Meta: panel Apo Pintu masuk", bool(page.query_selector(".tourlist, .empty--error")))
 
             # footer: sumber, lesen, penafian
             foot = page.inner_text(".footer").lower()
@@ -162,6 +174,12 @@ def main() -> int:
 
             body = goto("/patches", wait=".tbl")
             ck("route terus /patches 200 + jadual", len(page.query_selector_all(".tbl tbody tr")) > 10)
+
+            body = goto("/meta", wait=".statusstrip")
+            ck("route terus /meta", bool(page.query_selector(".statusstrip")))
+
+            body = goto("/patch-notes", wait=".pagehead")
+            ck("route terus /patch-notes", "Patch Notes" in body, body[:40])
 
             body = goto("/heroes/lancelot", wait=".detailhead")
             ck("route terus /heroes/:id", "Lancelot" in body, body[:40])
@@ -229,6 +247,21 @@ def main() -> int:
                 str(len(found)),
             )
 
+            # Keadaan filter disimpan dalam URL.
+            page.select_option("select[aria-label='Rank']", "mythic")
+            page.wait_for_timeout(700)
+            ck("URL menyimpan rank", "rank=mythic" in page.url, page.url)
+            page.click(".toggle__btn:has-text('Jadual')")
+            page.wait_for_timeout(700)
+            ck("URL menyimpan mod paparan", "view=table" in page.url, page.url)
+            page.click(".toggle__btn:has-text('Kad')")
+            page.wait_for_timeout(600)
+            page.goto(BASE + "/heroes?rank=mythic", wait_until="domcontentloaded", timeout=60000)
+            page.wait_for_selector(".hcard", timeout=45000)
+            page.wait_for_timeout(1200)
+            rank_value = page.query_selector("select[aria-label='Rank']").input_value()
+            ck("URL ditolak semula restore state", rank_value == "mythic", rank_value)
+
             # ------------------------------------------- 4. detail hero (2 klik)
             page.goto(BASE + "/heroes", wait_until="domcontentloaded", timeout=60000)
             page.wait_for_selector(".hcard", timeout=45000)
@@ -294,6 +327,16 @@ def main() -> int:
             page.click(".tabs__btn:has-text('System')")
             page.wait_for_timeout(900)
             ck("Detail patch: tab sistem ada nota", len(page.query_selector_all(".sysrow")) > 0)
+
+            # ------------------------------------------------- 7b. Patch Notes
+            body = goto("/patch-notes", wait=".pagehead")
+            ck("Patch Notes: tajuk halaman", "Patch Notes" in body)
+            ck(
+                "Patch Notes: sumber dinyatakan",
+                "MLBB Hub" in body,
+                body[:60],
+            )
+            ck("Patch Notes: medan carian ada", bool(page.query_selector(".toolbar__search input")))
 
             # ------------------------------------------------- 8. Items
             body = goto("/items", wait=".icard")

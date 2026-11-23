@@ -11,6 +11,12 @@ export interface Env {
   MANUAL_REFRESH_TOKEN?: string;
   CRON_HOUR_UTC?: string;
   DATA_CACHE_SECONDS?: string;
+  /**
+   * Token API PandaScore untuk turnamen MLBB. Secret Worker -_- bukan
+   * dalam wrangler.jsonc. Tanpa token, /api/tournaments pulangkan
+   * `available: false` dengan sebab, bukan ralat 500.
+   */
+  PANDASCORE_API_TOKEN?: string;
 }
 
 export interface SourceEntry {

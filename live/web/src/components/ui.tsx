@@ -195,24 +195,73 @@ export function EmptyState({ title, detail }: { title: string; detail?: string }
   );
 }
 
+/**
+ * Keadaan ralat: "Data unavailable" + sebab (bukan sekadar kosong), sumber
+ * jika ada, masa kemas kini terakhir yang diketahui, dan butang cuba lagi.
+ */
 export function ErrorState({
   title = 'Data unavailable',
   detail,
   onRetry,
+  source,
+  sourceUrl,
+  lastUpdated,
 }: {
   title?: string;
-  detail?: string | null;
-  onRetry?: () => void;
+  detail?: string | null | undefined;
+  onRetry?: (() => void) | undefined;
+  source?: string | null | undefined;
+  sourceUrl?: string | null | undefined;
+  lastUpdated?: string | null | undefined;
 }) {
   return (
     <div className="empty empty--error">
       <p className="empty__title">{title}</p>
       {detail ? <p className="empty__detail">{detail}</p> : null}
+      {source ? (
+        <p className="empty__detail">
+          Sumber:{' '}
+          {sourceUrl ? (
+            <a href={sourceUrl} target="_blank" rel="noreferrer noopener">
+              {source}
+            </a>
+          ) : (
+            source
+          )}
+        </p>
+      ) : null}
+      {lastUpdated ? (
+        <p className="empty__detail">Kemaskini terakhir: {lastUpdated}</p>
+      ) : null}
       {onRetry ? (
         <button type="button" className="btn btn--sm" onClick={onRetry}>
           Cuba lagi
         </button>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Keadaan memuat -Fx. Boneka (skeleton) lebih baik daripada teks "Memuat..."
+ * kerana ia menunjukkan bentuk kandungan yang akan tiba.
+ */
+export function StateBlock({
+  label,
+  rows = 3,
+}: {
+  label: string;
+  rows?: number;
+}) {
+  return (
+    <div className="stateblock" role="status" aria-live="polite">
+      <p className="stateblock__label">{label}</p>
+      {Array.from({ length: rows }, (_, index) => (
+        <div className="stateblock__row" key={index}>
+          <span className="stateblock__bar stateblock__bar--wide" />
+          <span className="stateblock__bar" />
+        </div>
+      ))}
     </div>
   );
 }

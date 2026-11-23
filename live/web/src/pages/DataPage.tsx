@@ -13,6 +13,53 @@ import { useAlmanac } from '../data/AlmanacContext';
 import { archiveApi, type ArchiveDocs, type ArchiveReference } from '../data/archive';
 import { formatDateTime, formatRelative } from '../lib/format';
 
+/**
+ * Katalog API - dikelompokkan mengikut sumber data. Setiap endpoint ada
+ * satu baris penerangan supaya senarai boleh digunakan tanpa membuka
+ * dokumen.
+ */
+interface ApiEndpoint {
+  path: string;
+  desc: string;
+}
+
+interface ApiGroup {
+  title: string;
+  note: string;
+  endpoints: ApiEndpoint[];
+}
+
+const API_GROUPS: ApiGroup[] = [
+  {
+    title: 'Meta live',
+    note: 'Worker sendiri. Dikemas kini setiap hari 02:00 UTC, satu snapshot setiap hari.',
+    endpoints: [
+      { path: '/api/heroes?rank=all', desc: 'Senarai 133 hero dengan win, pick, ban rate dan tier' },
+      { path: '/api/hero?id=lancelot', desc: 'Detail satu hero: rate, kemahiran, build, counter' },
+      { path: '/api/meta', desc: 'Status runtime: patch, bila kemas kini, bila seterusnya' },
+      { path: '/api/snapshots', desc: 'Senarai versi snapshot yang tersimpan' },
+      { path: '/api/deltas?window=7d', desc: 'Perubahan tier/rate antara dua snapshot (1d/7d/30d)' },
+    ],
+  },
+  {
+    title: 'Komunitari',
+    note: 'Sumber luar, diproksikan oleh Worker dan dicache di KV.',
+    endpoints: [
+      { path: '/api/patch-notes', desc: 'Artikel patch notes daripada MLBB Hub, dikemas kini harian' },
+      { path: '/api/tournaments', desc: 'Tornean MLBB yang akan datang (PandaScore)' },
+    ],
+  },
+  {
+    title: 'Arkib (statik)',
+    note: 'Dijana semasa build daripada CSV arkib - tanpa API, tanpa cache Worker.',
+    endpoints: [
+      { path: '/archive/core.json', desc: '87 versi patch, 350 perubahan hero, 99 perubahan item' },
+      { path: '/archive/reference.json', desc: '13 jadual rujukan: role, lane, emblem, mata wang' },
+      { path: '/archive/docs.json', desc: '5 dokumen: glosari, kronologi, sejarah meta, laporan' },
+    ],
+  },
+];
+
 export function DataPage() {
   const { manifest, snapshots, archive, archiveStatus, apiMeta } = useAlmanac();
   const [reference, setReference] = useState<ArchiveReference | null>(null);
@@ -170,43 +217,34 @@ export function DataPage() {
         </Panel>
       ) : null}
 
-      {/* 7. Pautan API */}
-      <Panel title="API">
-        <ul className="apilist">
-          <li>
-            <a href="/api/heroes?rank=all" target="_blank" rel="noreferrer noopener">
-              /api/heroes
-            </a>
-          </li>
-          <li>
-            <a href="/api/hero?id=lancelot" target="_blank" rel="noreferrer noopener">
-              /api/hero
-            </a>
-          </li>
-          <li>
-            <a href="/api/meta" target="_blank" rel="noreferrer noopener">
-              /api/meta
-            </a>
-          </li>
-          <li>
-            <a href="/api/snapshots" target="_blank" rel="noreferrer noopener">
-              /api/snapshots
-            </a>
-          </li>
-          <li>
-            <a href="/api/deltas?window=7d" target="_blank" rel="noreferrer noopener">
-              /api/deltas
-            </a>
-          </li>
-        </ul>
+      {/* 7. Katalog API - dikelompokkan mengikut sumber */}
+      <Panel title="API" hint="8 endpoint langsung + arkib penuh (78 endpoint)">
+        <div className="apigroups">
+          {API_GROUPS.map((group) => (
+            <section className="apigroup" key={group.title}>
+              <h3 className="apigroup__title">{group.title}</h3>
+              <p className="apigroup__note">{group.note}</p>
+              <ul className="apilist">
+                {group.endpoints.map((endpoint) => (
+                  <li key={endpoint.path}>
+                    <a href={endpoint.path} target="_blank" rel="noreferrer noopener">
+                      {endpoint.path}
+                    </a>
+                    <span className="apilist__desc">{endpoint.desc}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
         <p className="panel__foot">
-          Arkib penuh (78 endpoint) berada dalam repositori{' '}
+          Arkib penuh (78 endpoint, FastAPI) berada dalam repositori{' '}
           <a
-            href="https://github.com/ryujin-hue/mlbb-historical-database"
+            href="https://github.com/ryujin-hue/mlbb-almanac/tree/main/archive"
             target="_blank"
             rel="noreferrer noopener"
           >
-            mlbb-historical-database
+            mlbb-almanac/archive
           </a>
           .
         </p>

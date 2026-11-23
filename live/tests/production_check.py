@@ -164,8 +164,21 @@ def main() -> int:
             ck(f"laluan {path} 200", status == 200, f"status={status}")
             return page.inner_text("body")
 
-        # 1. Meta (halaman utama)
-        body = load("/", wait=".statusstrip")
+        # 1. Landing = senarai hero
+        body = load("/", wait=".hcard")
+        ck("landing: senarai hero", len(page.query_selector_all(".hcard")) > 100)
+
+        nav_links = page.eval_on_selector_all(
+            ".topnav__link", "els => els.map(e => e.textContent.trim())"
+        )
+        ck(
+            "nav: Heroes dulu, Meta kemudian",
+            nav_links[:2] == ["Heroes", "Meta"] and len(nav_links) == 7,
+            str(nav_links),
+        )
+
+        # 2. Meta (halaman ringkasan)
+        body = load("/meta", wait=".statusstrip")
         ck("Meta: strip status patch", bool(page.query_selector(".statusstrip__patch")))
         ck("Meta: KPI 4 statistik", len(page.query_selector_all(".kpirow .stat")) == 4)
         ck("Meta: bar win rate ikut role", len(page.query_selector_all(".rolebar")) >= 4)
@@ -175,7 +188,7 @@ def main() -> int:
         foot = page.inner_text(".footer").lower()
         ck("footer: lesen + penafian Moonton", "cc by-sa" in foot and "moonton" in foot)
 
-        # 2. Heroes
+        # 3. Heroes
         body = load("/heroes", wait=".hcard")
         cards = page.query_selector_all(".hcard")
         ck("Heroes: > 100 kad", len(cards) > 100, str(len(cards)))
@@ -218,15 +231,29 @@ def main() -> int:
         ck("Detail patch: versi dipapar", "2.2.16" in body)
         ck("Detail patch: baris perubahan hero", len(page.query_selector_all(".tbl--patch tbody tr")) > 0)
 
-        # 7. Items
+        # 7. Patch notes (MLBB Hub)
+        body = load("/patch-notes", wait=".pagehead")
+        ck("Patch Notes: halaman dipapar", "Patch Notes" in body)
+        ck("Patch Notes: sumber dinyatakan", "MLBB Hub" in body, body[:60])
+
+        # 8. Items
         body = load("/items", wait=".icard")
         ck("Items: > 90 kad item", len(page.query_selector_all(".icard")) > 90)
         ck("Items: imej item dimuat", len(page.query_selector_all(".icard__img img")) > 90)
 
-        # 8. Data
+        # 9. Data
         body = load("/data", wait=".page--data")
         for title in ("Status", "Sumber", "Statistik arkib", "Jadual rujukan"):
             ck(f"Data: seksyen {title}", title.lower() in body.lower())
+        ck(
+            "Data: katalog API dikelompokkan",
+            len(page.query_selector_all(".apigroup")) >= 3,
+            str(len(page.query_selector_all(".apigroup"))),
+        )
+        ck(
+            "Data: katalog ada endpoint patch-notes + tournaments",
+            "/api/patch-notes" in body and "/api/tournaments" in body,
+        )
 
         ck("tiada console error", len(errors) == 0, "; ".join(errors[:3]))
 
@@ -241,12 +268,18 @@ def main() -> int:
         mp.click(".tabbar__link:has-text('Heroes')")
         mp.wait_for_timeout(1400)
         ck("mobile: tab Heroes -> /heroes", mp.url.endswith("/heroes"), mp.url)
+        mp.click(".tabbar__link:has-text('Meta')")
+        mp.wait_for_timeout(1400)
+        ck("mobile: tab Meta -> /meta", mp.url.endswith("/meta"), mp.url)
+        mp.click(".tabbar__link:has-text('Heroes')")
+        mp.wait_for_timeout(1400)
         ck("mobile: kad hero dipapar", len(mp.query_selector_all(".hcard")) > 100)
         mp.click(".tabbar__link:has-text('More')")
         mp.wait_for_timeout(900)
         ck(
-            "mobile: menu More ada Items + Data",
-            mp.is_visible(".moremenu__link:has-text('Items')")
+            "mobile: menu More ada Patch Notes + Items + Data",
+            mp.is_visible(".moremenu__link:has-text('Patch Notes')")
+            and mp.is_visible(".moremenu__link:has-text('Items')")
             and mp.is_visible(".moremenu__link:has-text('Data')"),
         )
         mctx.close()

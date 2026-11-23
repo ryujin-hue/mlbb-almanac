@@ -9,19 +9,20 @@ import { useMemo } from 'react';
 
 import { Delta, EmptyState, TierBadge } from '../components/ui';
 import { useAlmanac } from '../data/AlmanacContext';
-import { WINDOW_OPTIONS, useMetaStore } from '../data/store';
+import { WINDOW_OPTIONS } from '../data/store';
+import { useMoverParams } from '../data/useHeroFilters';
 import { formatPercent } from '../lib/format';
 import { Link } from '../router';
 
 export function MoversPage() {
   const { deltas, heroes } = useAlmanac();
-  const meta = useMetaStore();
+  const meta = useMoverParams();
 
   const heroById = useMemo(() => new Map(heroes.map((hero) => [hero.id, hero])), [heroes]);
 
   const groups = useMemo(() => {
     const all = deltas?.deltas ?? [];
-    const threshold = meta.moverThreshold;
+    const threshold = meta.threshold;
     const rising = all
       .filter((delta) => (delta.tier_score_delta ?? 0) >= threshold)
       .sort((a, b) => (b.tier_score_delta ?? 0) - (a.tier_score_delta ?? 0));
@@ -34,7 +35,7 @@ export function MoversPage() {
     }).length;
     const fresh = all.filter((delta) => delta.trend === 'new').length;
     return { rising, falling, steady, fresh };
-  }, [deltas, meta.moverThreshold]);
+  }, [deltas, meta.threshold]);
 
   return (
     <div className="page page--movers">
@@ -63,8 +64,8 @@ export function MoversPage() {
                 min="0"
                 max="5"
                 step="0.1"
-                value={meta.moverThreshold}
-                onChange={(event) => meta.setMoverThreshold(Number(event.target.value) || 0)}
+                value={meta.threshold}
+                onChange={(event) => meta.setThreshold(Number(event.target.value) || 0)}
                 aria-label="Ambang delta"
               />
             </label>

@@ -10,7 +10,8 @@ import { FOCUS_SEARCH_EVENT } from '../components/shell';
 import { Delta, EmptyState, PatchTag, Portrait, Sheet, TierBadge } from '../components/ui';
 import { useAlmanac } from '../data/AlmanacContext';
 import type { ArchiveIndex } from '../data/archive';
-import { RANK_OPTIONS, SORT_OPTIONS, WINDOW_OPTIONS, selectHeroes, useMetaStore } from '../data/store';
+import { RANK_OPTIONS, SORT_OPTIONS, WINDOW_OPTIONS, selectHeroes } from '../data/store';
+import { useHeroFilters, useMoverParams } from '../data/useHeroFilters';
 import { formatPercent } from '../lib/format';
 import { Link } from '../router';
 
@@ -20,7 +21,10 @@ interface Props {
 
 export function HeroesPage({ archive }: Props) {
   const { heroes, deltas, status } = useAlmanac();
-  const meta = useMetaStore();
+  // Keadaan filter berada dalam URL - boleh dikongsi, boleh dikembalikan
+  // dengan butang "kembali" pelayar.
+  const meta = useHeroFilters();
+  const mover = useMoverParams();
   const [filterOpen, setFilterOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -77,10 +81,10 @@ export function HeroesPage({ archive }: Props) {
         damageTypes: meta.damageTypes,
         sort: meta.sort,
         desc: meta.desc,
-        threshold: meta.moverThreshold,
+        threshold: 0.5,
         archiveChanges,
       }),
-    [heroes, deltaMap, meta, archiveChanges]
+    [heroes, deltaMap, meta.rank, meta.query, meta.roles, meta.lanes, meta.damageTypes, meta.sort, meta.desc, archiveChanges]
   );
 
   const activeFilters = meta.roles.length + meta.lanes.length + meta.damageTypes.length;
@@ -105,17 +109,17 @@ export function HeroesPage({ archive }: Props) {
             <input
               ref={searchRef}
               type="search"
-              value={meta.query}
+              value={meta.queryText}
               placeholder="Cari hero…"
               aria-label="Cari hero"
-              onChange={(event) => meta.setQuery(event.target.value)}
+              onChange={(event) => meta.setQueryText(event.target.value)}
             />
           </div>
 
           <button
             type="button"
             className="btn btn--sm"
-            onClick={() => meta.toggleSortDirection()}
+            onClick={() => meta.toggleDirection()}
             aria-label="Ubah arah pengurutan"
             title={meta.desc ? 'Turun' : 'Naik'}
           >
@@ -147,9 +151,9 @@ export function HeroesPage({ archive }: Props) {
           </select>
 
           <select
-            value={meta.window}
+            value={mover.window}
             aria-label="Periode"
-            onChange={(event) => meta.setWindow(event.target.value)}
+            onChange={(event) => mover.setWindow(event.target.value)}
           >
             {WINDOW_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -173,15 +177,15 @@ export function HeroesPage({ archive }: Props) {
           <div className="toggle" role="group" aria-label="Paparan">
             <button
               type="button"
-              className={`toggle__btn${meta.heroView === 'cards' ? ' toggle__btn--on' : ''}`}
-              onClick={() => meta.setHeroView('cards')}
+              className={`toggle__btn${meta.view === 'cards' ? ' toggle__btn--on' : ''}`}
+              onClick={() => meta.setView('cards')}
             >
               Kad
             </button>
             <button
               type="button"
-              className={`toggle__btn${meta.heroView === 'table' ? ' toggle__btn--on' : ''}`}
-              onClick={() => meta.setHeroView('table')}
+              className={`toggle__btn${meta.view === 'table' ? ' toggle__btn--on' : ''}`}
+              onClick={() => meta.setView('table')}
             >
               Jadual
             </button>
@@ -196,7 +200,7 @@ export function HeroesPage({ archive }: Props) {
           title="Tiada hero yang sepadan"
           detail="Cuba longgarkan filter rank, role, lane, atau carian."
         />
-      ) : meta.heroView === 'cards' ? (
+      ) : meta.view === 'cards' ? (
         <div className="herogrid">
           {visible.map((hero) => {
             const note = archiveNotes.get(hero.id);
@@ -325,7 +329,7 @@ function FilterDrawer({
   onClose: () => void;
   heroes: { roles: string[]; lanes: string[]; damage_type: string | null }[];
 }) {
-  const meta = useMetaStore();
+  const meta = useHeroFilters();
 
   const roles = useMemo(() => {
     const set = new Set<string>();

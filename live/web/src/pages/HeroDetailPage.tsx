@@ -9,7 +9,15 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 
-import { Delta, EmptyState, ErrorState, PatchTag, Portrait, TierBadge } from '../components/ui';
+import {
+  Delta,
+  EmptyState,
+  ErrorState,
+  PatchTag,
+  Portrait,
+  StateBlock,
+  TierBadge,
+} from '../components/ui';
 import { API, fetchJson, type HeroDetailResponse } from '../data/client';
 import { useAlmanac } from '../data/AlmanacContext';
 import type { ArchiveIndex } from '../data/archive';
@@ -19,6 +27,9 @@ import { Link, navigate } from '../router';
 interface Props {
   heroId: string;
   archive: ArchiveIndex | null;
+  archiveStatus?: 'loading' | 'ready' | 'error';
+  archiveError?: string | null;
+  reloadArchive?: () => void;
 }
 
 type Tab = 'overview' | 'balance';
@@ -48,7 +59,13 @@ interface DetailHero {
   } | null;
 }
 
-export function HeroDetailPage({ heroId, archive }: Props) {
+export function HeroDetailPage({
+  heroId,
+  archive,
+  archiveStatus = 'ready',
+  archiveError,
+  reloadArchive,
+}: Props) {
   const { heroes, deltas } = useAlmanac();
   const [detail, setDetail] = useState<HeroDetailResponse | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -294,7 +311,15 @@ export function HeroDetailPage({ heroId, archive }: Props) {
         </div>
       ) : (
         <div className="detailbody">
-          {history.length === 0 ? (
+          {archiveStatus === 'loading' ? (
+            <StateBlock label="Memuat sejarah imbangan…" rows={2} />
+          ) : archiveStatus === 'error' ? (
+            <ErrorState
+              title="Data unavailable"
+              detail={archiveError ?? 'Arkib tidak dapat dimuatkan.'}
+              onRetry={reloadArchive}
+            />
+          ) : history.length === 0 ? (
             <EmptyState
               title="Tiada rekod perubahan"
               detail="Arkib tidak menyenaraikan perubahan patch untuk hero ini."

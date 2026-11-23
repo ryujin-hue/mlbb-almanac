@@ -46,10 +46,15 @@ commit, push mencetuskan build, jadi kelewatan paling lama satu hari.
 ## Frontend
 
 - **React + Vite**, tanpa state management luaran (Zustand untuk satu store).
-- **Routing laluan** (`router.tsx`, tanpa dependency router): `/`, `/heroes`,
-  `/heroes/<hero>`, `/movers`, `/patches`, `/patches/<versi>`, `/items`,
-  `/data`. Server menyervis `index.html` untuk laluan SPA (Pages `_redirects`,
-  Worker `not_found_handling`).
+- **Routing laluan** (`router.tsx`, tanpa dependency router): `/` (senarai
+  hero), `/heroes`, `/heroes/<hero>`, `/meta`, `/movers`, `/patches`,
+  `/patches/<versi>`, `/patch-notes`, `/items`, `/data`. Server menyervis
+  `index.html` untuk laluan SPA (Pages `_redirects`, Worker
+  `not_found_handling`).
+- **Keadaan filter dalam URL** (`data/useHeroFilters.ts`): rank, sort, arah,
+  carian, role/lane/tipe damage, mod kad/jadual, tempoh movers dan ambang
+  delta. Setiap paparan boleh dikongsi, butang "kembali" pelayar berfungsi
+  seperti biasa. Tiada state global - Zustand dibuang.
 - **Arkib dimuat lazy**: `core.json` (303 KB) diambil selari dengan API live;
   `reference.json` dan `docs.json` hanya diambil bila halaman Data dibuka.
 - **Rate dihitung semula di client** (`applyRankScope`) supaya ganti rank
@@ -90,3 +95,21 @@ dekat di direktori kerja semasa.
   "50,0%" walaupun nilai sebenar berbeza.
 - **Baris CSV ragged**: `DictReader` menghasilkan key `None` untuk kolum
   berlebihan. Buang key itu sebelum menulis semula.
+
+## Sumber luar (Worker)
+
+Worker ialah satu-satunya tempat yang memanggil API luar, supaya tiada CORS
+dan tiada token dalam client.
+
+- **Patch notes MLBB Hub** (`worker/src/lib/patch-notes.ts`): baca
+  `mlbbhub.com/news/sitemap.xml` (publik) dan halaman artikel, ambil
+  `ld+json` + badan `<article class="prose-article">`. Robots mlbbhub
+  membenarkan `/news/` tetapi **melarang `/api/`** - jadi Worker tidak pernah
+  memanggil API mereka. Cache di KV, disegarkan cron 02:00 UTC, stale-while-
+  revalidate untuk pelawat.
+- **Turnamen PandaScore** (`worker/src/lib/tournaments.ts`):
+  `api.pandascore.co/mlbb/tournaments/upcoming` dengan
+  `Authorization: Bearer <PANDASCORE_API_TOKEN>` (secret Worker). Tanpa
+  token, endpoint pulangkan `available: false` + sebab `no_token` - bukan
+  ralat 500 dan bukan senarai kosong yangpembaca tersalah baca sebagai
+  "tiada solen".

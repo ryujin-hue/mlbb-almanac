@@ -30,7 +30,55 @@ import {
   type SlimHero,
   type SnapshotMeta,
 } from './client';
-import { useMetaStore } from './store';
+import { useMoverParams } from './useHeroFilters';
+
+/** Artikel patch notes daripada MLBB Hub (Worker cachekan di KV). */
+export interface PatchNoteArticle {
+  version: string | null;
+  title: string;
+  url: string;
+  published_at: string | null;
+  summary: string;
+  image: string | null;
+  blocks: { kind: 'h' | 'p'; text: string }[];
+}
+
+export interface PatchNotesPayload {
+  available: boolean;
+  source: string;
+  source_url: string;
+  fetched_at: string;
+  count: number;
+  articles: PatchNoteArticle[];
+  reason?: string;
+  message?: string;
+}
+
+/** Turnamen MLBB daripada PandaScore. */
+export interface Tournament {
+  id: number;
+  name: string;
+  begin_at: string | null;
+  end_at: string | null;
+  league: string | null;
+  league_image: string | null;
+  status: string | null;
+  number_of_teams: number | null;
+  prizepool: string | null;
+  winner_name: string | null;
+  url: string | null;
+}
+
+export interface TournamentsPayload {
+  available: boolean;
+  source: string;
+  source_url: string;
+  fetched_at: string;
+  count: number;
+  tournaments: Tournament[];
+  reason?: string;
+  message?: string;
+}
 
 /** Status runtime Worker - sumber untuk status patch & jadual kemas kini. */
 export interface ApiMeta {
@@ -55,14 +103,22 @@ export interface AlmanacData {
   snapshots: SnapshotMeta[];
   archive: ArchiveIndex | null;
   archiveStatus: 'loading' | 'ready' | 'error';
+  /** Sebab arkib gagal dimuatkan (untuk paparan "Data unavailable"). */
+  archiveError: string | null;
   apiMeta: ApiMeta | null;
+  patchNotes: PatchNotesPayload | null;
+  patchNotesStatus: 'loading' | 'ready' | 'error';
+  tournaments: TournamentsPayload | null;
+  tournamentsStatus: 'loading' | 'ready' | 'error';
   reload: () => void;
+  reloadArchive: () => void;
 }
 
 const AlmanacContext = createContext<AlmanacData | null>(null);
 
 export function AlmanacProvider({ children }: { children: ReactNode }) {
-  const windowKey = useMetaStore((state) => state.window);
+  // Tempoh perbandingan dibaca dari URL - dikongsi antara Movers dan Heroes.
+  const { window: windowKey } = useMoverParams();
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -73,9 +129,20 @@ export function AlmanacProvider({ children }: { children: ReactNode }) {
   const [archive, setArchive] = useState<ArchiveIndex | null>(null);
   const [apiMeta, setApiMeta] = useState<ApiMeta | null>(null);
   const [archiveStatus, setArchiveStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [patchNotes, setPatchNotes] = useState<PatchNotesPayload | null>(null);
+  const [patchNotesStatus, setPatchNotesStatus] = useState<'loading' | 'ready' | 'error'>(
+    'loading'
+  );
+  const [tournaments, setTournaments] = useState<TournamentsPayload | null>(null);
+  const [tournamentsStatus, setTournamentsStatus] = useState<'loading' | 'ready' | 'error'>(
+    'loading'
+  );
   const [nonce, setNonce] = useState(0);
+  const [archiveNonce, setArchiveNonce] = useState(0);
 
   const reload = useCallback(() => setNonce((value) => value + 1), []);
+  const reloadArchive = useCallback(() => setArchiveNonce((value) => value + 1), []);
 
   // Indeks hero + snapshot: sekali sahaja (ganti rank dikira di client).
   useEffect(() => {
@@ -170,6 +237,7 @@ export function AlmanacProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     setArchiveStatus('loading');
+    setArchiveError(null);
     archiveApi
       .core()
       .then((core) => {
@@ -178,8 +246,54 @@ export function AlmanacProvider({ children }: { children: ReactNode }) {
           setArchiveStatus('ready');
         }
       })
+      .catch((error) => {
+        if (cancelled) return;
+        setArchiveError(error instanceof Error ? error.message : String(error));
+        setArchiveStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [archiveNonce]);
+
+  // Patch notes MLBB Hub - Worker cachekan, jadi ini murah.
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+    setPatchNotesStatus('loading');
+    fetchJson<PatchNotesPayload>('/api/patch-notes', { signal: controller.signal })
+      .then((data) => {
+        if (cancelled) return;
+        setPatchNotes(data);
+        setPatchNotesStatus(data.available ? 'ready' : 'error');
+      })
       .catch(() => {
-        if (!cancelled) setArchiveStatus('error');
+        if (!cancelled) setPatchNotesStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [nonce]);
+
+  // Turnamen MLBB (PandaScore).
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+    setTournamentsStatus('loading');
+    fetchJson<TournamentsPayload>('/api/tournaments', { signal: controller.signal })
+      .then((data) => {
+        if (cancelled) return;
+        setTournaments(data);
+        setTournamentsStatus(data.available ? 'ready' : 'error');
+      })
+      .catch(() => {
+        if (!cancelled) setTournamentsStatus('error');
       });
 
     return () => {
@@ -199,10 +313,33 @@ export function AlmanacProvider({ children }: { children: ReactNode }) {
       snapshots,
       archive,
       archiveStatus,
+      archiveError,
       apiMeta,
+      patchNotes,
+      patchNotesStatus,
+      tournaments,
+      tournamentsStatus,
       reload,
+      reloadArchive,
     }),
-    [status, error, fromCache, index, deltas, snapshots, archive, archiveStatus, apiMeta, reload]
+    [
+      status,
+      error,
+      fromCache,
+      index,
+      deltas,
+      snapshots,
+      archive,
+      archiveStatus,
+      archiveError,
+      apiMeta,
+      patchNotes,
+      patchNotesStatus,
+      tournaments,
+      tournamentsStatus,
+      reload,
+      reloadArchive,
+    ]
   );
 
   return <AlmanacContext.Provider value={value}>{children}</AlmanacContext.Provider>;

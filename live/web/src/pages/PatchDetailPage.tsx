@@ -6,7 +6,8 @@
  */
 import { useMemo, useState } from 'react';
 
-import { EmptyState, PatchTag } from '../components/ui';
+import { EmptyState, ErrorState, PatchTag } from '../components/ui';
+import { useAlmanac } from '../data/AlmanacContext';
 import { heroSlug, type ArchiveIndex } from '../data/archive';
 import { Link } from '../router';
 
@@ -14,11 +15,20 @@ interface Props {
   version: string;
   archive: ArchiveIndex | null;
   archiveStatus: 'loading' | 'ready' | 'error';
+  archiveError?: string | null;
+  reloadArchive?: () => void;
 }
 
 type Section = 'heroes' | 'items' | 'system';
 
-export function PatchDetailPage({ version, archive, archiveStatus }: Props) {
+export function PatchDetailPage({
+  version,
+  archive,
+  archiveStatus,
+  archiveError,
+  reloadArchive,
+}: Props) {
+  const { patchNotes } = useAlmanac();
   const [section, setSection] = useState<Section>('heroes');
 
   const patch = useMemo(
@@ -44,7 +54,11 @@ export function PatchDetailPage({ version, archive, archiveStatus }: Props) {
   if (archiveStatus === 'error' || !archive) {
     return (
       <div className="page">
-        <EmptyState title="Data unavailable" detail="Arkib patch tidak dapat dimuatkan." />
+        <ErrorState
+          title="Data unavailable"
+          detail={archiveError ?? 'Arkib patch tidak dapat dimuatkan.'}
+          onRetry={reloadArchive}
+        />
       </div>
     );
   }
@@ -66,6 +80,10 @@ export function PatchDetailPage({ version, archive, archiveStatus }: Props) {
   const heroCount = changes.heroes.length;
   const itemCount = changes.items.length;
 
+  // Artikel patch notes luar yang menyebut versi ini (jika ada).
+  const relatedNote =
+    patchNotes?.articles.find((article) => article.version === patch.version) ?? null;
+
   return (
     <div className="page page--patchdetail">
       <Link to="/patches" className="backlink">
@@ -83,6 +101,16 @@ export function PatchDetailPage({ version, archive, archiveStatus }: Props) {
           <span>{systems.length} nota sistem</span>
         </div>
       </header>
+
+      {relatedNote ? (
+        <div className="patchnote-link">
+          <span className="patchnote-link__label">Bacaan patch</span>
+          <a href={relatedNote.url} target="_blank" rel="noreferrer noopener">
+            {relatedNote.title}
+          </a>
+          <span className="patchnote-link__src">MLBB Hub</span>
+        </div>
+      ) : null}
 
       <div className="tabs" role="tablist">
         <button

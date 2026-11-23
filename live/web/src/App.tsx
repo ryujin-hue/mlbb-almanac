@@ -1,6 +1,5 @@
 import { AlmanacProvider, useAlmanac } from './data/AlmanacContext';
 import { BottomNav, TopNav } from './components/shell';
-import { ErrorState } from './components/ui';
 import { DataPage } from './pages/DataPage';
 import { HeroDetailPage } from './pages/HeroDetailPage';
 import { HeroesPage } from './pages/HeroesPage';
@@ -9,6 +8,7 @@ import { MetaPage } from './pages/MetaPage';
 import { MoversPage } from './pages/MoversPage';
 import { PatchDetailPage } from './pages/PatchDetailPage';
 import { PatchesPage } from './pages/PatchesPage';
+import { PatchNotesPage } from './pages/PatchNotesPage';
 import { formatDateTime, formatRelative } from './lib/format';
 import { matchRoute, usePath, useScrollReset } from './router';
 
@@ -38,7 +38,7 @@ function Shell() {
   );
 }
 
-/** Label status untuk navigasi: patch terkini + bila data dikemas kini. */
+/** Label status untuk navigasi: patch terkini + bila data kemas kini. */
 function useStatus(): { statusLabel: string; statusTone: 'live' | 'stale' | 'error' } {
   const { apiMeta, archive, snapshots, status } = useAlmanac();
   const latestPatch = archive?.core.patches[archive?.core.patches.length - 1]?.version;
@@ -54,38 +54,59 @@ function useStatus(): { statusLabel: string; statusTone: 'live' | 'stale' | 'err
 }
 
 function Routes({ path }: { path: string }) {
-  const { archive, archiveStatus, status, error, reload } = useAlmanac();
+  const { archive, archiveStatus, archiveError, reloadArchive } = useAlmanac();
   const route = matchRoute(path);
 
   switch (route.name) {
-    case 'heroes':
-      return <HeroesPage archive={archive} />;
     case 'hero':
-      return <HeroDetailPage heroId={route.params.id ?? ''} archive={archive} />;
+      return (
+        <HeroDetailPage
+          heroId={route.params.id ?? ''}
+          archive={archive}
+          archiveStatus={archiveStatus}
+          archiveError={archiveError}
+          reloadArchive={reloadArchive}
+        />
+      );
     case 'movers':
       return <MoversPage />;
     case 'patches':
-      return <PatchesPage archive={archive} archiveStatus={archiveStatus} />;
+      return (
+        <PatchesPage
+          archive={archive}
+          archiveStatus={archiveStatus}
+          archiveError={archiveError}
+          reloadArchive={reloadArchive}
+        />
+      );
     case 'patch':
       return (
         <PatchDetailPage
           version={route.params.version ?? ''}
           archive={archive}
           archiveStatus={archiveStatus}
+          archiveError={archiveError}
+          reloadArchive={reloadArchive}
         />
       );
+    case 'patch-notes':
+      return <PatchNotesPage />;
     case 'items':
-      return <ItemsPage archive={archive} archiveStatus={archiveStatus} />;
+      return (
+        <ItemsPage
+          archive={archive}
+          archiveStatus={archiveStatus}
+          archiveError={archiveError}
+          reloadArchive={reloadArchive}
+        />
+      );
     case 'data':
       return <DataPage />;
     case 'meta':
-    default:
-      if (status === 'error') {
-        return (
-          <ErrorState detail={error} onRetry={reload} />
-        );
-      }
       return <MetaPage />;
+    case 'heroes':
+    default:
+      return <HeroesPage archive={archive} />;
   }
 }
 

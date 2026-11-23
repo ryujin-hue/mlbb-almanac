@@ -1,8 +1,12 @@
 /**
  * Shell aplikasi: navigasi atas (desktop) dan bawah (mobile).
  *
- * Desktop  : MLBB ALMANAC | Meta Heroes Movers Patches Items Data | status | cari
- * Mobile   : bar bawah Meta | Heroes | Movers | Patches | More (Items, Data)
+ * Susunan: Heroes dulu, Meta kemudian - senarai hero ialah kerja harian,
+ * ringkasan meta adalah rujukan.
+ *
+ * Desktop  : MLBB ALMANAC | Heroes Meta Movers Patches Patch Notes Items Data
+ * Mobile   : bar bawah Heroes | Meta | Movers | Patches | More (Patch Notes,
+ *            Items, Data)
  */
 import { useEffect, useState } from 'react';
 
@@ -10,26 +14,32 @@ import { Link, usePath } from '../router';
 import { Sheet } from './ui';
 
 export const NAV_ITEMS = [
-  { path: '/', label: 'Meta' },
   { path: '/heroes', label: 'Heroes' },
+  { path: '/meta', label: 'Meta' },
   { path: '/movers', label: 'Movers' },
   { path: '/patches', label: 'Patches' },
+  { path: '/patch-notes', label: 'Patch Notes' },
   { path: '/items', label: 'Items' },
   { path: '/data', label: 'Data' },
 ] as const;
 
 const MOBILE_NAV = [
-  { path: '/', label: 'Meta' },
   { path: '/heroes', label: 'Heroes' },
+  { path: '/meta', label: 'Meta' },
   { path: '/movers', label: 'Movers' },
   { path: '/patches', label: 'Patches' },
 ] as const;
+
+/** Item yang hanya muncul dalam sheet "More" pada mobile. */
+const MORE_ITEMS = NAV_ITEMS.filter(
+  (item) => item.path === '/patch-notes' || item.path === '/items' || item.path === '/data'
+);
 
 export const FOCUS_SEARCH_EVENT = 'almanac:focus-search';
 
 function Brand() {
   return (
-    <Link to="/" className="brand" aria-label="MLBB Almanac - Meta">
+    <Link to="/heroes" className="brand" aria-label="MLBB Almanac - senarai hero">
       <svg className="brand__mark" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
         {[2, 9, 16].map((x) =>
           [3, 8, 13, 18].map((y) => (
@@ -54,7 +64,9 @@ export function TopNav({
   const path = usePath();
 
   const isActive = (target: string) =>
-    target === '/' ? path === '/' : path === target || path.startsWith(`${target}/`);
+    target === '/heroes'
+      ? path === '/' || path === '/heroes'
+      : path === target || path.startsWith(`${target}/`);
 
   return (
     <header className="topbar">
@@ -84,7 +96,7 @@ export function TopNav({
           aria-label="Cari hero"
           onClick={() => {
             window.dispatchEvent(new Event(FOCUS_SEARCH_EVENT));
-            if (!window.location.pathname.startsWith('/heroes')) {
+            if (!window.location.pathname.startsWith('/heroes') && window.location.pathname !== '/') {
               window.history.pushState({}, '', '/heroes');
               window.dispatchEvent(new Event('almanac:navigate'));
             }
@@ -109,9 +121,11 @@ export function BottomNav() {
   }, [path]);
 
   const isActive = (target: string) =>
-    target === '/' ? path === '/' : path === target || path.startsWith(`${target}/`);
+    target === '/heroes'
+      ? path === '/' || path === '/heroes'
+      : path === target || path.startsWith(`${target}/`);
 
-  const moreActive = isActive('/items') || isActive('/data');
+  const moreActive = MORE_ITEMS.some((item) => isActive(item.path));
 
   return (
     <>
@@ -138,7 +152,7 @@ export function BottomNav() {
 
       <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="Lagi" side="bottom">
         <nav className="moremenu">
-          {NAV_ITEMS.filter((item) => item.path === '/items' || item.path === '/data').map((item) => (
+          {MORE_ITEMS.map((item) => (
             <Link key={item.path} to={item.path} className="moremenu__link">
               {item.label}
             </Link>

@@ -5,18 +5,20 @@
  */
 import { useMemo, useState } from 'react';
 
-import { EmptyState, PatchTag } from '../components/ui';
+import { EmptyState, ErrorState, PatchTag } from '../components/ui';
 import type { ArchiveIndex } from '../data/archive';
 import { Link } from '../router';
 
 interface Props {
   archive: ArchiveIndex | null;
   archiveStatus: 'loading' | 'ready' | 'error';
+  archiveError?: string | null;
+  reloadArchive?: () => void;
 }
 
 type Mode = 'cards' | 'table';
 
-export function ItemsPage({ archive, archiveStatus }: Props) {
+export function ItemsPage({ archive, archiveStatus, archiveError, reloadArchive }: Props) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [mode, setMode] = useState<Mode>('cards');
@@ -55,7 +57,11 @@ export function ItemsPage({ archive, archiveStatus }: Props) {
   if (archiveStatus === 'error' || !archive) {
     return (
       <div className="page">
-        <EmptyState title="Data unavailable" detail="Katalog item tidak dapat dimuatkan." />
+        <ErrorState
+          title="Data unavailable"
+          detail={archiveError ?? 'Katalog item tidak dapat dimuatkan.'}
+          onRetry={reloadArchive}
+        />
       </div>
     );
   }

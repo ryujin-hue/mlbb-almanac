@@ -13,6 +13,13 @@ import {
   writeMeta,
 } from './lib/store';
 import { buildMetaMovers, computeDeltas, toSlimHeroes } from './lib/deltas';
+import {
+  fetchPatchNotes,
+  isPatchNotesStale,
+  readPatchNotes,
+  writePatchNotes,
+} from './lib/patch-notes';
+import { fetchTournaments, readTournaments, writeTournaments } from './lib/tournaments';
 import type { Env, RuntimeMeta } from './types';
 
 const SOURCE_NAME = 'MLBBDex GitHub mirror';
@@ -207,6 +214,98 @@ async function handleGetSnapshots(request: Request, env: Env): Promise<Response>
  * `window` bisa 1d / 7d / 30d. Perhitungan di edge supaya client tidak
  * perlu menarik dua dataset penuh untuk dibandingkan sendiri.
  */
+/**
+ * Patch notes MLBB Hub. Cache di KV; kalau lapuk, semak semula di
+ * belakang (stale-while-revalidate) supaya halaman tidak pernah menunggu
+ * jaringan luar.
+ */
+async function handleGetPatchNotes(request: Request, env: Env): Promise<Response> {
+  const cached = await readPatchNotes(env.MLBB_KV);
+
+  if (cached && !cached.available) {
+    return jsonResponse(cached, 200, request, env, { 'Cache-Control': 'public, max-age=600' });
+  }
+
+  if (cached && !(await isPatchNotesStale(cached))) {
+    return jsonResponse(cached, 200, request, env, { 'Cache-Control': 'public, max-age=600' });
+  }
+
+  if (cached) {
+    // Ada data lama - pulangkan serta segarkan di belakang.
+    void refreshPatchNotes(env).catch(() => undefined);
+    return jsonResponse(cached, 200, request, env, { 'Cache-Control': 'public, max-age=600' });
+  }
+
+  try {
+    const fresh = await fetchPatchNotes();
+    await writePatchNotes(env.MLBB_KV, fresh);
+    return jsonResponse(fresh, 200, request, env, { 'Cache-Control': 'public, max-age=600' });
+  } catch (error) {
+    return jsonResponse(
+      {
+        available: false,
+        source: 'MLBB Hub (mlbbhub.com)',
+        source_url: 'https://mlbbhub.com/news/',
+        fetched_at: new Date().toISOString(),
+        count: 0,
+        articles: [],
+        reason: 'upstream_error',
+        message: String(error).slice(0, 160),
+      },
+      200,
+      request,
+      env,
+      { 'Cache-Control': 'public, max-age=60' }
+    );
+  }
+}
+
+async function refreshPatchNotes(env: Env): Promise<void> {
+  const fresh = await fetchPatchNotes();
+  if (fresh.available) await writePatchNotes(env.MLBB_KV, fresh);
+}
+
+/**
+ * Turnamen MLBB (PandaScore). Token datang daripada secret Worker.
+ * Tanpa token, jawapan jujur: `available: false` + sebab.
+ */
+async function handleGetTournaments(request: Request, env: Env): Promise<Response> {
+  const CACHE = { 'Cache-Control': 'public, max-age=600, s-maxage=600' };
+
+  if (!env.PANDASCORE_API_TOKEN?.trim()) {
+    const payload = await fetchTournaments(undefined);
+    return jsonResponse(payload, 200, request, env, { 'Cache-Control': 'no-store' });
+  }
+
+  const cached = await readTournaments(env.MLBB_KV);
+  if (cached && cached.available && Date.now() - new Date(cached.fetched_at).getTime() < 3600_000) {
+    return jsonResponse(cached, 200, request, env, CACHE);
+  }
+
+  try {
+    const fresh = await fetchTournaments(env.PANDASCORE_API_TOKEN);
+    if (fresh.available) await writeTournaments(env.MLBB_KV, fresh);
+    return jsonResponse(fresh, 200, request, env, CACHE);
+  } catch (error) {
+    return jsonResponse(
+      {
+        available: false,
+        source: 'PandaScore',
+        source_url: 'https://api.pandascore.co/mlbb/tournaments/upcoming',
+        fetched_at: new Date().toISOString(),
+        count: 0,
+        tournaments: [],
+        reason: 'upstream_error',
+        message: String(error).slice(0, 160),
+      },
+      200,
+      request,
+      env,
+      { 'Cache-Control': 'no-store' }
+    );
+  }
+}
+
 async function handleGetDeltas(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const windowParam = (url.searchParams.get('window') ?? '7d').toLowerCase();
@@ -485,6 +584,11 @@ async function handleScheduled(event: ScheduledEvent, env: Env): Promise<void> {
   } catch (error) {
     console.error('[scheduled] refresh failed', error);
   }
+  try {
+    await refreshPatchNotes(env);
+  } catch (error) {
+    console.error('[scheduled] patch notes refresh failed', error);
+  }
 }
 
 export default {
@@ -519,6 +623,14 @@ export default {
       return handleGetDeltas(request, env);
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/patch-notes') {
+      return handleGetPatchNotes(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/tournaments') {
+      return handleGetTournaments(request, env);
+    }
+
     if (request.method === 'POST' && url.pathname === '/api/refresh') {
       return handleManualRefresh(request, env);
     }
@@ -538,6 +650,8 @@ export default {
           '/api/meta',
           '/api/dataset',
           '/api/heroes',
+          '/api/patch-notes',
+          '/api/tournaments',
           '/api/hero',
           '/api/snapshots',
           '/api/deltas',

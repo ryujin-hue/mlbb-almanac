@@ -15,10 +15,22 @@ import { compareVersions } from '../data/archive';
 import { summarize } from '../data/store';
 import { formatDateTime, formatPercent, formatRelative } from '../lib/format';
 import { Link } from '../router';
-import { Delta, Panel, PatchTag, Portrait, Stat, TierBadge } from '../components/ui';
+import { Delta, ErrorState, Panel, PatchTag, Portrait, Stat, StateBlock, TierBadge } from '../components/ui';
+import { TournamentPanel } from '../components/TournamentPanel';
 
 export function MetaPage() {
-  const { heroes, manifest, deltas, snapshots, archive, apiMeta, status } = useAlmanac();
+  const {
+    heroes,
+    manifest,
+    deltas,
+    snapshots,
+    archive,
+    archiveStatus,
+    archiveError,
+    apiMeta,
+    status,
+    reloadArchive,
+  } = useAlmanac();
 
   const stats = useMemo(() => summarize(heroes, manifest?.rates_summary ?? null, 'all'), [heroes, manifest]);
 
@@ -155,7 +167,11 @@ export function MetaPage() {
           }
         >
           {movers.rising.length === 0 ? (
-            <div className="state">{deltas?.available === false ? deltas.message ?? 'Data unavailable' : 'Data unavailable'}</div>
+            <div className="state">
+              {deltas?.available === false
+                ? (deltas.message ?? 'Data unavailable')
+                : 'Tiada hero yang naik dalam tempoh ini.'}
+            </div>
           ) : (
             <ul className="minilist">
               {movers.rising.map((delta) => (
@@ -174,7 +190,11 @@ export function MetaPage() {
 
         <Panel title="Turun" hint={`${deltas?.window ?? '7d'}`}>
           {movers.falling.length === 0 ? (
-            <div className="state">{deltas?.available === false ? deltas.message ?? 'Data unavailable' : 'Data unavailable'}</div>
+            <div className="state">
+              {deltas?.available === false
+                ? (deltas.message ?? 'Data unavailable')
+                : 'Tiada hero yang turun dalam tempoh ini.'}
+            </div>
           ) : (
             <ul className="minilist">
               {movers.falling.map((delta) => (
@@ -202,8 +222,16 @@ export function MetaPage() {
           </Link>
         }
       >
-        {recentBalance.length === 0 ? (
-          <div className="state">Data unavailable</div>
+        {archiveStatus === 'loading' ? (
+          <StateBlock label="Memuat nota perubahan…" rows={2} />
+        ) : archiveStatus === 'error' ? (
+          <ErrorState
+            title="Data unavailable"
+            detail={archiveError ?? 'Arkib tidak dapat dimuatkan.'}
+            onRetry={reloadArchive}
+          />
+        ) : recentBalance.length === 0 ? (
+          <div className="state">Tiada nota perubahan dalam arkib.</div>
         ) : (
           <ul className="balancerows">
             {recentBalance.map((change, index) => {
@@ -234,6 +262,9 @@ export function MetaPage() {
           </ul>
         )}
       </Panel>
+
+      {/* 6. Turnamen (PandaScore) - jadual esports, sumber luar yang berbeza */}
+      <TournamentPanel />
     </div>
   );
 }
