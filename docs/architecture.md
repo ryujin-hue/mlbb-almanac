@@ -105,11 +105,40 @@ dan tiada token dalam client.
   `mlbbhub.com/news/sitemap.xml` (publik) dan halaman artikel, ambil
   `ld+json` + badan `<article class="prose-article">`. Robots mlbbhub
   membenarkan `/news/` tetapi **melarang `/api/`** - jadi Worker tidak pernah
-  memanggil API mereka. Cache di KV, disegarkan cron 02:00 UTC, stale-while-
-  revalidate untuk pelawat.
+  memanggil API mereka. Cache di KV, disegarkan cron 02:00 UTC,
+  stale-while-revalidate untuk pelawat.
 - **Turnamen PandaScore** (`worker/src/lib/tournaments.ts`):
   `api.pandascore.co/mlbb/tournaments/upcoming` dengan
   `Authorization: Bearer <PANDASCORE_API_TOKEN>` (secret Worker). Tanpa
   token, endpoint pulangkan `available: false` + sebab `no_token` - bukan
-  ralat 500 dan bukan senarai kosong yangpembaca tersalah baca sebagai
-  "tiada solen".
+  ralat 500 dan bukan senarai kosong yang pembaca tersalah baca sebagai
+  "tiada solen". Liputan MLBB PandaScore jarang: kalau `upcoming` kosong,
+  Worker jatuh balik kepada `past?sort=-begin_at` dan tandai
+  `scope: 'recent'` (UI bertukar tajuk kepada "Turnamen terkini").
+
+## Secret Worker dalam CI
+
+Input `secrets:` pada `cloudflare/wrangler-action@v3` mencari **nama**
+pemboleh ubah persekitaran, bukan nilainya - secret GitHub tidak boleh
+digunakan terus di situ ("Value for secret X not found in environment").
+Langkah CI sendiri menggunakan API Cloudflare:
+
+```
+PUT https://api.cloudflare.com/client/v4/accounts/{acct}/workers/scripts/mlbb-data-workflow/secrets
+{"name":"PANDASCORE_API_TOKEN","text":"...","type":"secret_text"}
+```
+
+## Cache service worker
+
+`sw.js` menyimpan arkib JSON dalam cache shell. Bila bentuk `core.json`
+berubah (kunci baharu ditambah), cache lama masih dihidapkan dan client
+jatuh pada "core.systems is not iterable" - halaman Patch dan Item mati
+tanpa cara pulih. Dua langkah wajib:
+
+1. Naikkan `VERSION` dalam `sw.js` (cache lama dipadam).
+2. Arkib JSON dilayan stale-while-revalidate, jadi salinan lapuk pulih
+   sendiri pada lawatan seterusnya.
+
+Selain itu, `indexArchive` memperlakukan setiap senarai sebagai pilihan
+(`core.systems ?? []`) supaya fail lama degrade kepada nota yang kurang,
+bukan exception.
