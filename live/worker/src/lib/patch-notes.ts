@@ -168,10 +168,15 @@ function extractImage(html: string, meta: Record<string, unknown>): string | nul
     if (IMAGE_HOSTS.some((host) => hostOf(url).endsWith(host))) return url;
   }
 
+  // ld+json(image) boleh menunjuk ke CDN Moonton - bukan ilustrasi artikel,
+  // jadi host yang sama diverifikasi.
   const image = meta.image;
   if (image && typeof image === 'object' && 'url' in image) {
     const url = (image as { url?: string }).url;
-    if (typeof url === 'string') return normalizeImage(url);
+    if (typeof url === 'string') {
+      const normalized = normalizeImage(url);
+      if (IMAGE_HOSTS.some((host) => hostOf(normalized).endsWith(host))) return normalized;
+    }
   }
   return null;
 }
