@@ -34,6 +34,12 @@ export interface TournamentsPayload {
   fetched_at: string;
   count: number;
   tournaments: Tournament[];
+  /**
+   * 'upcoming' - senarai yang akan datang.
+   * 'recent'   - tiadaanja akan datang; senarai yang baru sahaja disimpan
+   *              oleh PandaScore (liputan MLBB mereka jarang dikemas kini).
+   */
+  scope: 'upcoming' | 'recent';
   reason?: string;
   message?: string;
 }
@@ -90,6 +96,7 @@ export async function fetchTournaments(token: string | undefined): Promise<Tourn
     source: 'PandaScore',
     source_url: `${BASE}/tournaments/upcoming`,
     fetched_at: new Date().toISOString(),
+    scope: 'upcoming',
   };
 
   if (!token || !token.trim()) {
@@ -103,17 +110,18 @@ export async function fetchTournaments(token: string | undefined): Promise<Tourn
     };
   }
 
+  const headers = {
+    Authorization: `Bearer ${token.trim()}`,
+    Accept: 'application/json',
+  };
+
   try {
-    const response = await fetch(`${BASE}/tournaments/upcoming?per_page=20`, {
-      headers: {
-        Authorization: `Bearer ${token.trim()}`,
-        Accept: 'application/json',
-      },
-    });
+    const response = await fetch(`${BASE}/tournaments/upcoming?per_page=20`, { headers });
     if (!response.ok) {
       const detail = await response.text().catch(() => '');
       return {
         ...base,
+        scope: 'upcoming',
         count: 0,
         tournaments: [],
         reason: response.status === 401 || response.status === 403 ? 'bad_token' : 'upstream_error',
@@ -122,11 +130,35 @@ export async function fetchTournaments(token: string | undefined): Promise<Tourn
     }
     const raw = (await response.json()) as PandaScoreTournament[];
     const list = Array.isArray(raw) ? raw.map(normalize) : [];
+
+    if (list.length > 0) {
+      return {
+        ...base,
+        available: true,
+        scope: 'upcoming',
+        count: list.length,
+        tournaments: list,
+      };
+    }
+
+    // Tiadaagues akan datang dalam liputan PandaScore - jatuh balik kepada
+    // yang terkini supaya jadual esports tidak jadi panel mati.
+    const past = await fetch(`${BASE}/tournaments/past?per_page=10&sort=-begin_at`, {
+      headers,
+    });
+    const pastRaw = past.ok ? ((await past.json()) as PandaScoreTournament[]) : [];
+    const recent = Array.isArray(pastRaw) ? pastRaw.map(normalize) : [];
+
     return {
       ...base,
-      available: true,
-      count: list.length,
-      tournaments: list,
+      available: recent.length > 0,
+      scope: 'recent',
+      count: recent.length,
+      tournaments: recent,
+      message:
+        recent.length > 0
+          ? 'PandaScore tiada tournaments MLBB akan datang; ini senarai terkini.'
+          : 'PandaScore tiada tournaments MLBB untuk dipaparkan.',
     };
   } catch (error) {
     return {

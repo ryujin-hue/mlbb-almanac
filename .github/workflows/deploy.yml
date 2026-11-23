@@ -96,3 +96,8 @@ jobs:
           # assets = ./site). Config itu mengandungi relative path, jadi ia
           # kekal sah walaupun repositori dipindah ke live/.
           workingDirectory: live
+          # Secret runtime Worker. Token PandaScore membolehkan
+          # /api/tournaments menarik jadual turnamen MLBB; tanpa token,
+          # endpoint itu menjawab "no_token" dengan jujur.
+          secrets: |
+            PANDASCORE_API_TOKEN=${{ secrets.PANDASCORE_API_TOKEN }}

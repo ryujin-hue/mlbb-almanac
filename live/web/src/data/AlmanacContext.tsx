@@ -76,6 +76,8 @@ export interface TournamentsPayload {
   fetched_at: string;
   count: number;
   tournaments: Tournament[];
+  /** 'upcoming' = akan datang, 'recent' = terkini (PandaScore ada liputanMlbb yang jarang). */
+  scope: 'upcoming' | 'recent';
   reason?: string;
   message?: string;
 }

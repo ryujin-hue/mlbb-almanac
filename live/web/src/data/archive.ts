@@ -113,7 +113,8 @@ export interface ArchiveItem {
 export interface ArchiveCore {
   manifest: ArchiveManifest;
   season: ArchiveSeason;
-  systems: ArchiveSystemNote[];
+  /** Nota sistem ikut versi patch. Managersih jika sumber lama tiada kunci ini. */
+  systems?: ArchiveSystemNote[];
   patches: ArchivePatch[];
   hero_changes: ArchiveHeroChange[];
   item_changes: ArchiveItemChange[];
@@ -193,8 +194,15 @@ export function indexArchive(core: ArchiveCore): ArchiveIndex {
   const heroByName = new Map<string, ArchiveHero>();
   for (const hero of core.heroes) heroByName.set(hero.hero.toLowerCase(), hero);
 
+  // Cache lama (service worker) mungkin menyimpan core.json tanpa kunci
+  // yang ditambah kemudian - contohnya "systems". Satu kunci yang hilang
+  // tidak boleh menjatuhkan seluruh indeks, jadi setiap senarai dilindungi.
+  const heroChanges = core.hero_changes ?? [];
+  const itemChanges = core.item_changes ?? [];
+  const systemNotes = core.systems ?? [];
+
   const heroChangesByHero = new Map<string, ArchiveHeroChange[]>();
-  for (const change of core.hero_changes) {
+  for (const change of heroChanges) {
     const key = change.hero.toLowerCase();
     const bucket = heroChangesByHero.get(key);
     if (bucket) bucket.push(change);
@@ -205,7 +213,7 @@ export function indexArchive(core: ArchiveCore): ArchiveIndex {
   }
 
   const itemChangesByItem = new Map<string, ArchiveItemChange[]>();
-  for (const change of core.item_changes) {
+  for (const change of itemChanges) {
     const key = change.item.toLowerCase();
     const bucket = itemChangesByItem.get(key);
     if (bucket) bucket.push(change);
@@ -224,11 +232,11 @@ export function indexArchive(core: ArchiveCore): ArchiveIndex {
     }
     return bucket;
   };
-  for (const change of core.hero_changes) bucketFor(change.version).heroes.push(change);
-  for (const change of core.item_changes) bucketFor(change.version).items.push(change);
+  for (const change of heroChanges) bucketFor(change.version).heroes.push(change);
+  for (const change of itemChanges) bucketFor(change.version).items.push(change);
 
   const systemsByVersion = new Map<string, ArchiveSystemNote[]>();
-  for (const note of core.systems) {
+  for (const note of systemNotes) {
     const bucket = systemsByVersion.get(note.version);
     if (bucket) bucket.push(note);
     else systemsByVersion.set(note.version, [note]);

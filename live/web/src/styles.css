@@ -2157,3 +2157,11 @@ a:focus-visible {
   font-size: .68rem;
   color: var(--muted);
 }
+
+/* Nota panel - penerangan pendek sebelum senarai (contoh: sumber luar). */
+.panel__note {
+  margin-bottom: 8px;
+  font-size: .72rem;
+  color: var(--muted);
+  line-height: 1.45;
+}

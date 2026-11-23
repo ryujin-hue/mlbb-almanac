@@ -43,17 +43,27 @@ export function TournamentPanel() {
       <Panel title="Turnamen seterusnya">
         <EmptyState
           title="Tiada turnamen"
-          detail="PandaScore tidak menyenaraikan turnamen MLBB yang akan datang."
+          detail={
+            tournaments.message ??
+            'PandaScore tidak menyenaraikan turnamen MLBB yang akan datang.'
+          }
         />
       </Panel>
     );
   }
 
+  // PandaScore ada liputan MLBB yang jarang dikemas kini - kalau tiada
+  // tournament akan datang, yang ditunjuk ialah senarai terkini.
+  const isRecent = tournaments.scope === 'recent';
+
   return (
     <Panel
-      title="Turnamen seterusnya"
+      title={isRecent ? 'Turnamen terkini' : 'Turnamen seterusnya'}
       hint={`${tournaments.count} dari ${tournaments.source}`}
     >
+      {isRecent && tournaments.message ? (
+        <p className="panel__note">{tournaments.message}</p>
+      ) : null}
       <ul className="tourlist">
         {tournaments.tournaments.slice(0, 6).map((tournament) => (
           <li className="tourrow" key={tournament.id}>

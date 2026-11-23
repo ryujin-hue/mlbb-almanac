@@ -7,7 +7,7 @@
  *   - /api/heroes + /api/deltas: stale-while-revalidate, dan hasilnya
  *     dicache supaya aplikasi tetap punya data saat offline.
  */
-const VERSION = 'mlbb-almanac-v2';
+const VERSION = 'mlbb-almanac-v3';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 
@@ -84,6 +84,14 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirstShell(request));
+    return;
+  }
+
+  // Arkib: stale-while-revalidate. Cache lama mungkin menyimpan bentuk
+  // JSON yang lama (kunci yang hilang) - jadi cache dipulangkan serta
+  // disegarkan di belakang, dan pelawat seterusnya dapat fail terkini.
+  if (url.pathname.startsWith('/archive/') && url.pathname.endsWith('.json')) {
+    event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
