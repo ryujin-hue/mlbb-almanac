@@ -14,7 +14,9 @@ const NEWS_BASE = 'https://mlbbhub.com/news/';
 const UA =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36';
 
-export const PATCH_NOTES_KEY = 'mlbb:patch-notes:latest';
+// Versi kunci:_naik apabila bentuk atau URL imej berubah supaya cache
+// lama tidak bercampur.
+export const PATCH_NOTES_KEY = 'mlbb:patch-notes:v2:latest';
 export const PATCH_NOTES_MAX_AGE_SECONDS = 60 * 60 * 12;
 
 /** Versi patch: 2.1.70, 2.2.16a, 1.9.90 */
@@ -121,15 +123,31 @@ function extractBody(html: string): { kind: 'h' | 'p'; text: string }[] {
   return blocks;
 }
 
+/**
+ * Imej artikel datang melalui wsrv.nl (proxy imej) selalunya pada lebar
+ * 3840px - terlalu besar untuk satu kad. Hadkan lebar supaya halaman patch
+ * notes tidak menari Hundreds of megabytes.
+ */
+function normalizeImage(raw: string): string {
+  // Atribut HTML mengandungi entity (&amp;) - tanpa ini, query string rosak.
+  const url = raw
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+  if (!url.includes('wsrv.nl')) return url;
+  if (/[?&]w=\d+/.test(url)) return url.replace(/([?&])w=\d+/, '$1w=640');
+  return `${url}${url.includes('?') ? '&' : '?'}w=640`;
+}
+
 function extractImage(html: string, meta: Record<string, unknown>): string | null {
   const article = html.match(/<article\b[\s\S]*?<\/article>/i);
   const region = article ? article[0] : html;
   const src = region.match(/<img[^>]+src="(https?:\/\/[^"]+)"/i);
-  if (src?.[1]) return src[1];
+  if (src?.[1]) return normalizeImage(src[1]);
   const image = meta.image;
   if (image && typeof image === 'object' && 'url' in image) {
     const url = (image as { url?: string }).url;
-    return typeof url === 'string' ? url : null;
+    return typeof url === 'string' ? normalizeImage(url) : null;
   }
   return null;
 }
@@ -162,6 +180,26 @@ async function parseArticle(url: string): Promise<PatchNoteArticle | null> {
  * Tarik patch notes terkini. Gagal pada mana-mana artikel individu tidak
  * menggagalkan keseluruhan - artikel lain masih dipulangkan.
  */
+/** Jalankan kerja dengan had konkurensi ( Worker hanya ada CPU time terhad). */
+async function mapWithLimit<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      results[index] = await worker(items[index] as T);
+    }
+  });
+
+  await Promise.all(runners);
+  return results;
+}
+
 export async function fetchPatchNotes(limit = 40): Promise<PatchNotesPayload> {
   const xml = await fetchText(SITEMAP_URL);
   const urls = [...new Set((xml.match(/<loc>([^<]+)<\/loc>/g) ?? []).map((m) => m.replace(/<\/?loc>/g, '')))];
@@ -170,17 +208,24 @@ export async function fetchPatchNotes(limit = 40): Promise<PatchNotesPayload> {
     return isPatchArticle(slug);
   });
 
-  const articles: PatchNoteArticle[] = [];
-  for (const url of patchUrls.slice(0, 80)) {
+  // Tarik secara selari dengan had konkurensi: 80 artikel satu per satu
+  // mengambil terlalu lama pada lawatan pertama.
+  const candidates = patchUrls.slice(0, 80);
+  const parsed = await mapWithLimit(candidates, 6, async (url) => {
     try {
-      const item = await parseArticle(url);
-      // Patch notes = ada nombor versi, atau tajuknya menyebut "patch notes".
-      // Artikel meta/jungle lain yang kebetulan ada "patch" dalam slug
-      // tidak layak masuk senarai.
-      if (item && (item.version || /patch\s*notes/i.test(item.title))) articles.push(item);
+      return await parseArticle(url);
     } catch (error) {
       console.warn('[patch-notes] skip', url, String(error));
+      return null;
     }
+  });
+
+  const articles: PatchNoteArticle[] = [];
+  for (const item of parsed) {
+    // Patch notes = ada nombor versi, atau tajuknya menyebut "patch notes".
+    // Artikel meta/jungle lain yang kebetulan ada "patch" dalam slug
+    // tidak layak masuk senarai.
+    if (item && (item.version || /patch\s*notes/i.test(item.title))) articles.push(item);
     if (articles.length >= limit) break;
   }
 

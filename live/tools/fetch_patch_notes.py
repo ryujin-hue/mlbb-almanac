@@ -77,7 +77,7 @@ def article_body(html: str) -> list[dict]:
     images: list[str] = []
     for src in re.findall(r'<img[^>]+src="([^"]+)"', region):
         if src.startswith("http") and src not in images and "logo" not in src.lower():
-            images.append(src)
+            images.append(unescape(src))
 
     return blocks, images[:4]
 

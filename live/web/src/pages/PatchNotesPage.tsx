@@ -110,7 +110,13 @@ export function PatchNotesPage() {
               <li className="notecard" key={article.url}>
                 <div className="notecard__grid">
                   {article.image ? (
-                    <img className="notecard__img" src={article.image} alt="" loading="lazy" />
+                    <img
+                      className="notecard__img"
+                      src={article.image}
+                      alt=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
                   ) : null}
                   <div className="notecard__body">
                     <div className="notecard__meta">
