@@ -1056,7 +1056,9 @@ a:focus-visible {
 
 .herogrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Satu kolum pada telefon: dua kolum terlalu sempit untuk nama hero
+     ("Masha" -> "Ma..."). Tablet/mesa boleh tampal dua. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 9px;
 }
 .hcard {
@@ -1804,6 +1806,12 @@ a:focus-visible {
   }
   .statusstrip__meta {
     margin-left: 0;
+  }
+}
+
+@media (min-width: 520px) {
+  .herogrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
