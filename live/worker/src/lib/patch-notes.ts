@@ -61,7 +61,8 @@ function cleanText(raw: string): string {
     .trim();
 }
 
-async function fetchText(url: string, timeoutMs = 20000): Promise<string> {
+// 12s: satu halaman yang perlahan tak boleh tahan keseluruhan refresh.
+async function fetchText(url: string, timeoutMs = 12000): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -139,15 +140,38 @@ function normalizeImage(raw: string): string {
   return `${url}${url.includes('?') ? '&' : '?'}w=640`;
 }
 
+/**
+ * Host yang dibenarkan untuk imej artikel. Banner iklan dalam badan
+ * artikel datang dari CDN Moonton (akmweb.youngjoygame.com) - itu bukan
+ * ilustrasi artikel, jadi ia dilangkau.
+ */
+const IMAGE_HOSTS = ['esportpedia.b-cdn.net', 'wsrv.nl'];
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
+  }
+}
+
 function extractImage(html: string, meta: Record<string, unknown>): string | null {
   const article = html.match(/<article\b[\s\S]*?<\/article>/i);
   const region = article ? article[0] : html;
-  const src = region.match(/<img[^>]+src="(https?:\/\/[^"]+)"/i);
-  if (src?.[1]) return normalizeImage(src[1]);
+
+  const sources = [...region.matchAll(/<img[^>]+src="(https?:\/\/[^"]+)"/gi)]
+    .map((match) => match[1])
+    .filter((url): url is string => Boolean(url));
+
+  for (const source of sources) {
+    const url = normalizeImage(source);
+    if (IMAGE_HOSTS.some((host) => hostOf(url).endsWith(host))) return url;
+  }
+
   const image = meta.image;
   if (image && typeof image === 'object' && 'url' in image) {
     const url = (image as { url?: string }).url;
-    return typeof url === 'string' ? normalizeImage(url) : null;
+    if (typeof url === 'string') return normalizeImage(url);
   }
   return null;
 }
