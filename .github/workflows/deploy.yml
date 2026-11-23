@@ -80,6 +80,33 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Secret runtime Worker. Token PandaScore membolehkan /api/tournaments
+      # menarik jadual tournament MLBB; tanpa token, endpoint itu menjawab
+      # "no_token" dengan jujur - bukan 500.
+      #
+      # Input `secrets:` pada wrangler-action mencari NAMA pemboleh ubah
+      # persekitaran, bukan nilainya - jadi ia tidak boleh digunakan untuk
+      # secret GitHub. API Cloudflare terus lebih jelas dan tidak bergantung
+      # pada versi action.
+      - name: Set secret runtime Worker (PandaScore)
+        if: steps.secret.outputs.skip != 'true'
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PANDASCORE_TOKEN: ${{ secrets.PANDASCORE_API_TOKEN }}
+        run: |
+          if [ -z "$PANDASCORE_TOKEN" ]; then
+            echo "::warning::Secret PANDASCORE_API_TOKEN belum ditetapkan - endpoint /api/tournaments akan jawab no_token."
+            exit 0
+          fi
+          payload=$(jq -nc --arg t "$PANDASCORE_TOKEN" '{name:"PANDASCORE_API_TOKEN",text:$t,type:"secret_text"}')
+          curl -sS -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/workers/scripts/mlbb-data-workflow/secrets" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$payload" | jq -r '.success'
+          echo "Secret PANDASCORE_API_TOKEN ditetapkan."
+
       - name: Deploy ke Cloudflare Workers
         if: steps.secret.outputs.skip != 'true'
         uses: cloudflare/wrangler-action@v3
@@ -96,8 +123,3 @@ jobs:
           # assets = ./site). Config itu mengandungi relative path, jadi ia
           # kekal sah walaupun repositori dipindah ke live/.
           workingDirectory: live
-          # Secret runtime Worker. Token PandaScore membolehkan
-          # /api/tournaments menarik jadual turnamen MLBB; tanpa token,
-          # endpoint itu menjawab "no_token" dengan jujur.
-          secrets: |
-            PANDASCORE_API_TOKEN=${{ secrets.PANDASCORE_API_TOKEN }}
