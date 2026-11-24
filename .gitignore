@@ -30,3 +30,8 @@ live/pages/.wrangler/
 .DS_Store
 .idea/
 .vscode/
+
+# Rahsia
+.gh-token
+.env
+.env.*

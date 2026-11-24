@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/brand/assets/mlbb-a.svg" alt="MLBB Almanac" width="420" />
+
 # MLBB Almanac
 
 **Every patch since 2016 and today's live meta, in one almanac.**
@@ -17,7 +19,7 @@ usually kept apart in the same table:
 
 | | Layer | Shape | Freshness |
 |---|---|---|---|
-| **Then** | Patch history | 87 versions since 2016, 350 hero changes, 99 item changes, 104 items, 13 reference tables, 5 documents | daily auto-update |
+| **Then** | Patch history | 87 versions since 2016 (1.1.23.109.1 → 2.2.23), 350 hero changes, 99 item changes, 133 heroes, 104 items, 13 reference tables, 5 documents | daily auto-update |
 | **Now** | Live meta | 133 heroes with win/pick/ban rate, tier, daily snapshots | hourly refresh, daily snapshot |
 
 The live entry is the last one in the same row. That is the whole idea: a hero
@@ -110,7 +112,7 @@ cd .. && node --experimental-strip-types --import ./worker/tests/register-ts.mjs
 ```bash
 cd live
 python3 tests/smoke_test_v2.py                                        # 88 checks, browser
-QA_BASE=https://mlbb-almanac.pages.dev python3 tests/production_check.py   # 29 checks, live
+QA_BASE=https://mlbb-almanac.pages.dev python3 tests/production_check.py   # 70 checks, live
 cd ../archive && python3 -m pytest tests/ -q                           # archive suite
 ```
 
@@ -126,6 +128,18 @@ cd ../archive && python3 -m pytest tests/ -q                           # archive
 
 Both Cloudflare deploys share one concurrency group (`cloudflare-deploy`) —
 two deploys at once trip the API rate limit (code 10429).
+
+## Brand
+
+The wordmark is folded-paper origami in gold and silver, drawn as polygons:
+`docs/brand/assets/mlbb-a.svg`. It reads as one line of type, so the site
+header needs no separate wordmark text beside it. The 12-cell mark stays as
+the small icon — favicon, PWA icon, app tile — because origami does not
+survive 16px.
+
+Identity, palette, voice and taglines live in
+[`docs/brand/identity.md`](docs/brand/identity.md); the visual board is
+[`docs/brand/board.html`](docs/brand/board.html).
 
 ## Data, sources, honesty
 

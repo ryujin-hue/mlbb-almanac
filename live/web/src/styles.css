@@ -118,18 +118,17 @@ h3 {
 .brand:hover {
   text-decoration: none;
 }
-.brand__mark {
+.brand__logo {
+  display: block;
   flex: none;
+  height: 34px;
+  width: auto;
 }
-.brand__prefix {
-  font-size: .78rem;
-  letter-spacing: .08em;
-  color: var(--muted);
-}
-.brand__name {
-  font-size: .92rem;
-  font-weight: 800;
-  letter-spacing: .06em;
+
+@media (max-width: 519px) {
+  .brand__logo {
+    height: 27px;
+  }
 }
 
 .topnav {

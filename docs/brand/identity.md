@@ -30,14 +30,42 @@ Tiada warna lain. Cyan bermaksud "sedang berlaku", gold bermaksud
 
 ## Logo
 
-12 sel: 3 kolum x 4 baris. Grid 24 unit; kolum x = 2, 9, 16; baris
-y = 3, 8, 13, 18; setiap sel 6 x 2.5 unit. Satu sel menyala - sel
-terakhir dalam urutan baca (baris 4, kolum 3) - cyan `#00E5FF`,
-melambangkan entri terkini dalam senarai kronologi.
+Dua bentuk, dua tugas.
 
-Logo ini berfungsi sebagai: favicon 16px, ikon PWA 192/512, tanda di kepala
-laman, dan diganding dengan wordmark `MLBB ALMANAC`. Tiada bentuk bulat,
-tiada gradien, tiada unsur playful.
+**Wordmark origami "MLBB-A"** (`brand/mlbb-a.svg`) - bentuk utama. Huruf
+dilipat daripada keping kertas, emas dan perak, dengan bayang lembut supaya
+setiap lipatan dibaca sebagai muka yang berlainan. Ia membawa nama "MLBB"
+dan "Almanac" (A) dalam satu baris, jadi tidak perlu teks tambahan di
+sebelahnya.
+
+| Bahagian | Warna |
+|---|---|
+| Emas (M, B pertama, A) | `#f3c65f` `#d49b27` `#b47b14` |
+| Perak (L, B kedua, tanda sempang) | `#f8fafc` `#e2e8f0` `#cbd5e1` `#94a3b8` |
+| Panel logo | `#101d35` |
+
+Wordmark ini sengaja membawa ramp emas-perak sendiri, bukan token UI.
+Token cyan `#00E5FF` dan gold `#F5C518` ialah bahasa *data* - status,
+tier, patch - dan tidak dilute oleh warna logo.
+
+**Ikon 12 sel** (`brand/mark.svg`) - bentuk kedua. 12 sel: 3 kolum x 4 baris.
+Grid 24 unit; kolum x = 2, 9, 16; baris y = 3, 8, 13, 18; setiap sel
+6 x 2.5 unit. Satu sel menyala - sel terakhir dalam urutan baca (baris 4,
+kolum 3) - cyan `#00E5FF`, melambangkan entri terkini dalam senarai
+kronologi.
+
+Ikon ini hanya untuk saiz kecil: favicon 16px, ikon PWA 192/512. Origami
+tidak boleh dibaca pada 16px, jadi ia tidak pernah menggantikan wordmark.
+
+Fail:
+
+| Fail | Guna |
+|---|---|
+| `live/web/public/brand/mlbb-a.svg` | wordmark dengan panel latar |
+| `live/web/public/brand/mlbb-a-transparent.svg` | wordmark lutsinar (header laman) |
+| `live/web/public/brand/og-image.png` | kad perkongsian 1200x630 |
+| `live/web/public/almanac-mark.svg`, `favicon.svg`, `icon-192/512.png` | ikon kecil |
+| `docs/brand/assets/` | salinan untuk dokumen dan brand board |
 
 ## Nada suara
 

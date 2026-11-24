@@ -1,160 +1,110 @@
-# MLBB Meta & Counter — Full Extraction V3
+<div align="center">
+  <img src="../docs/brand/assets/mlbb-a.svg" alt="MLBB Almanac" width="360" />
+</div>
 
-## Website
+# MLBB Almanac — Live Layer
 
-`site/` berisi laman web statik (Hero roster, Counter Lab, Items, Data & Sources)
-yang membaca JSON di `site/dataset/` terus-terusan. Tiada build step, tiada
-npm dependency — sesuai kontrak. Jalankan secara lokal:
+Bahasa Indonesia · [English monorepo README](../README.md)
+
+Lapisan "sekarang" bagi **MLBB Almanac**: kadar win, pick dan ban yang langsung,
+tier, snapshot harian, catatan patch MLBB Hub, dan jadual sukan MLBB.
+Semuanya datang dari Worker; laman hanya membaca.
+
+## Isi folder ini
+
+```
+worker/          Cloudflare Worker — API, KV, cron 02:00 UTC
+  src/index.ts     router utama (/api/*)
+  src/lib/         store, deltas, counters, patch-notes, tournaments, audio-range
+  tests/           16 unit tests (vitest)
+web/             React 19 + Vite — laman
+  src/pages/       Meta, Heroes, Movers, Patches, Items, Data, Patch Notes
+  src/components/  shell (topnav/bottomnav), panel, ui, tournament
+  src/data/        client, AlmanacContext, archive index, URL-state hooks
+pages/           Cloudflare Pages Functions — proxy /api/* dan /audio/* ke Worker
+tools/           build_archive.py, dev-server.mjs, fetch_patch_notes.py
+tests/           smoke_test_v2.py (88 semakan), production_check.py (70 semakan)
+```
+
+Bahan warisan daripada projek "MLBB Meta & Counter" yang lama masih ada di
+folder ini (`site/`, `extract_mlbb_data.py`, `templates/`, `run_termux.sh`),
+tetapi **tidak lagi deployed**. Sumber kebenaran ialah `worker/`, `web/`,
+`pages/`.
+
+## Endpoint Worker
+
+Semua panggilan keluar dibuat oleh Worker — tiada token pihak ketiga dalam
+pelayar.
+
+| Endpoint | Fungsi |
+|---|---|
+| `GET /api/meta` | status runtime, patch semasa, jumlah hero |
+| `GET /api/dataset` | kontrak penuh `manifest + heroes + counters + items + maps` |
+| `GET /api/heroes?rank=all` | senarai hero dengan kadar, pick, ban, tier |
+| `GET /api/hero?id=<slug>` | detail satu hero |
+| `GET /api/snapshots` | senarai versi snapshot tersimpan |
+| `GET /api/deltas?window=7d&threshold=0.5` | perubahan tier/kadar antara dua snapshot |
+| `GET /api/patch-notes` | artikel patch notes MLBB Hub (dari sitemap awam) |
+| `GET /api/tournaments` | jadual sukan MLBB (PandaScore) |
+| `POST /api/refresh` | refresh manual (perlu token) |
+
+Kunci KV: `mlbb:dataset:latest`, `mlbb:meta:latest`, `mlbb:snap:*`,
+`mlbb:patch-notes:v3:latest`, `mlbb:tournaments:latest`.
+
+## Cron dan snapshot
+
+- Cron Worker: **02:00 UTC** setiap hari → ambil data upstream, normalisasi,
+  simpan snapshot baharu dan kemas kini `mlbb:dataset:latest`.
+- `GET /api/deltas` bandingkan snapshot semasa dengan yang lama — di situlah
+  data Movers berasal.
+- `mlbb:patch-notes` disegarkan pada cron yang sama dengan
+  stale-while-revalidate, jadi pelawat tidak perlu menunggu scrape.
+
+## Audio hero
+
+`/audio/<slug>.mp3` dilayan Worker dengan `Range` 206 supaya pemain boleh
+lompat ke awal. Pages Functions hanya meneruskan — Pages tidak boleh
+melayani Range sendiri.
+
+## Jalankan secara lokal
 
 ```bash
-cd site && python3 -m http.server 5173
+# 1. arkib -> JSON (perlu dijalankan sebelum build web)
+python3 tools/build_archive.py
+
+# 2. build laman
+cd web && npm install && npm run build
+
+# 3. mock API Worker tanpa Cloudflare
+cd .. && node --experimental-strip-types --import ./worker/tests/register-ts.mjs \
+    tools/dev-server.mjs 5178
 ```
 
-Butiran seni bina, cara matchup dikira, dan senarai data rosak yang dikendalikan
-oleh laman web: [`docs/design/website.md`](docs/design/website.md).
-
-## Daily Auto Update (Cloudflare Worker + KV)
-
-Aliran runtime baharu:
-
-1. Cloudflare Cron Trigger memanggil `scheduled()` sekali sehari.
-2. Worker ambil data terkini dari sumber MLBBDex mirror (`achedon12/mlbb`).
-3. Worker normalisasi ke kontrak `manifest + heroes + counters + items + maps`.
-4. Snapshot terkini disimpan di Cloudflare KV:
-   - `mlbb:dataset:latest`
-   - `mlbb:meta:latest`
-5. Frontend baca data dari endpoint Worker:
-   - `GET /api/dataset`
-   - `GET /api/meta`
-
-Metadata runtime yang disediakan API:
-- `lastUpdated`
-- `patch`
-- `totalHeroes`
-- `source`
-- `nextUpdateAt`
-
-### Struktur fail Worker
-
-```text
-worker/
-  wrangler.toml
-  package.json
-  tsconfig.json
-  .dev.vars.example
-  src/
-    index.ts
-    types.ts
-    lib/
-      fetch-upstream.ts
-      normalize.ts
-      store.ts
-      time.ts
-```
-
-### Setup tempatan
+## Uji
 
 ```bash
-cd worker
-pnpm install
-cp .dev.vars.example .dev.vars
-pnpm dev
+cd live
+python3 tests/smoke_test_v2.py                                        # 88 semakan, browser
+QA_BASE=https://mlbb-almanac.pages.dev python3 tests/production_check.py   # 70 semakan, live
+cd worker && npx vitest run                                          # 16 unit tests
 ```
 
-Trigger cron secara lokal:
+## Yang perlu diketahui
 
-```bash
-pnpm dev:cron
-```
+- **MLBB Hub tidak boleh dipanggil melalui API mereka** — robots.txt mereka
+  melarang `/api/`. Worker hanya membaca sitemap `/news/` dan halaman
+  artikel. Setiap artikel mengekalkan pautan ke asalnya.
+- **Liputan PandaScore bagi MLBB jarang** — `upcoming` lazimnya kosong.
+  Worker jatuh balik kepada `past?sort=-begin_at` dan menandakan
+  `scope: 'recent'`, jadi tajuk panel berubah kepada "Turnamen terkini".
+- **Cache service worker mesti dinaikkan** setiap kali bentuk
+  `archive/core.json` berubah, jika tidak pelawat melihat JSON lama.
 
-Trigger manual refresh:
+## Sumber
 
-```bash
-curl -X POST "http://127.0.0.1:8787/api/refresh" -H "X-Refresh-Token: replace-with-local-token"
-```
+- MLBBDex mirror (`achedon12/mlbb`) — CC BY-SA 4.0
+- Mobile Legends Wiki — bagi imej dan rujukan
+- MLBB Hub — artikel patch notes (tulisan rakan)
+- PandaScore — jadual sukan MLBB
 
-### Setup production (wrangler + dashboard)
-
-1. Cipta KV namespace:
-   - `wrangler kv namespace create MLBB_KV`
-   - `wrangler kv namespace create MLBB_KV --preview`
-2. Isikan `id` dan `preview_id` dalam `worker/wrangler.toml`.
-3. Set secret token manual refresh (opsyenal):
-   - `wrangler secret put MANUAL_REFRESH_TOKEN`
-4. Deploy Worker:
-   - `pnpm deploy`
-5. Dashboard Cloudflare > Worker > Triggers:
-   - pastikan cron `0 2 * * *` aktif (UTC).
-
-## Profil Hero + Lagu Hero (v3)
-
-Tekan nama hero (di senarai, jadual komposisi, meta movers, atau ringkasan
-patch) untuk membuka profil: modal di desktop, bottom sheet di mobile.
-Profil memaparkan gambar hero, nama, role, tier, dan win/pick/ban rate.
-
-Tekan gambar hero dalam profil untuk:mainkan lagu hero tersebut (loop,
-volume 0.7). Tekan sekali lagi untuk jeda/sambung. Penanda equalizer
-muncul semasa lagu bermain. Menutup profil (X, backdrop, ESC, butang
-Kembali, swipe turun) menghentikan lagu dengan fade-out ~200ms dan reset
-ke 0:00.
-
-Fail audio berada di `web/public/audio/PICS/` - nama folder dan fail dikekalkan
-seperti asal (ada koma dan ruang, jadi URL di-encode). Pemetaan hero ke fail
-ada dalam satu fail config: `web/src/data/heroAudio.ts`. Manager audio
-(satu objek `Audio` global) ada di `web/src/lib/heroAudio.ts`.
-
-Butiran cara tambah hero/lagu baharu: [`docs/design/hero-audio.md`](docs/design/hero-audio.md).
-
-### Deploy
-
-```bash
-cd worker
-npm install
-npm run deploy      # predeploy: build web -> site/, kemudian wrangler deploy
-```
-
-Atau guna workflow `.github/workflows/deploy.yml` (perlu secret
-`CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`).
-
-## Frontend Status Bar (v2)
-
-Status bar dipasang di atas hero roster (global di bawah topbar):
-
-- `Live Data` + green pulsing dot
-- `Updated X mins/hours ago`
-- `Next update in Xh`
-
-Fail berkaitan:
-- `site/index.html`
-- `site/assets/css/app.css`
-- `site/assets/js/live-status.js`
-- `site/assets/js/main.js`
-
-Jika `/api/meta` gagal, UI jatuh balik ke `Offline fallback` dan laman masih guna data statik lokal.
-
-## Apa yang disertakan sekarang
-
-- `extract_mlbb_data.py`: collector yang menyimpan HTML asal, jadual yang berjaya diparse, indeks halaman kejohanan, fail manifest, log sumber dan hash SHA-256.
-- `data/`: snapshot pro hero global, MSC 2026 dan subset MPL Malaysia S18 yang telah tersedia dalam V2.
-- `templates/`: struktur CSV untuk matriks semua hero mengikut musim dan rekod draft per game.
-- `.github/workflows/extract.yml`: workflow manual GitHub Actions supaya koleksi boleh dijalankan dalam persekitaran berinternet.
-- Laporan Word dan slaid PowerPoint yang menerangkan skop, sumber, aliran ekstraksi dan batasan.
-
-## Tentang syarat 100 MiB
-
-Collector menyemak saiz sebenar hasil ekstraksi melalui `--min-output-mb 100`. Ia cuba mengumpul halaman pro, halaman kejohanan dan repositori rujukan yang mengandungi JSON/aset. Jika hasil sumber sebenar masih kurang daripada 100 MiB, ia melaporkannya sebagai gagal mencapai saiz — **tiada fail kosong, bytes rawak, data pendua atau rekod perlawanan rekaan ditambah**.
-
-## Status build ini
-
-Persekitaran penyediaan pakej ini tidak mempunyai capaian DNS/HTTP terus ke sumber luar. Oleh itu, ZIP yang diberikan ialah **kit ekstraksi dengan snapshot permulaan**, bukan dakwaan bahawa ekstrak sejarah penuh >100 MiB sudah berjaya dijalankan. Jalankan workflow atau skrip dalam persekitaran yang ada internet untuk menghasilkan folder dataset sebenar. Jangan tandakan semua musim sebagai lengkap tanpa memeriksa `source_fetch_log.csv` dan `extraction_report.json`.
-
-## Sumber utama
-
-- MLBBDex esports: https://mlbbdex.com/en/esports
-- MLBBDex MSC 2026: https://mlbbdex.com/en/esports/msc-2026
-- MLBB Analytics: https://www.mlbbanalytics.com/heroes dan https://www.mlbbanalytics.com/esports
-- MLBBHub MPL MY: https://mlbbhub.com/mpl/my/stats
-- Historical scrape/analysis repository: https://github.com/LiTianYeoh/MLBB_Tournament_Analysis
-- Reference game data and image assets (MIT stated in repository README): https://github.com/Ceplin03/database-mlbb.Mobile-Legends-Bang-Bang
-
-Baca `source_attribution.md` untuk attribution dan batasan lesen.
+Tidak berafiliasi dengan Moonton.

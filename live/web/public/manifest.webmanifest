@@ -16,7 +16,9 @@
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Meta Movers", "url": "/#/movers" },
-    { "name": "Komposisi Tim", "url": "/#/composition" }
+    { "name": "Heroes", "url": "/heroes" },
+    { "name": "Meta", "url": "/meta" },
+    { "name": "Movers", "url": "/movers" },
+    { "name": "Patch Notes", "url": "/patch-notes" }
   ]
 }

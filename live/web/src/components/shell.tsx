@@ -37,19 +37,20 @@ const MORE_ITEMS = NAV_ITEMS.filter(
 
 export const FOCUS_SEARCH_EVENT = 'almanac:focus-search';
 
+/**
+ * Jenama: wordmark origami "MLBB-A" (emas & perak, lipatan kertas).
+ * Varian lutsinar supaya duduk terus pada latar gelap tanpa kotak.
+ */
 function Brand() {
   return (
-    <Link to="/heroes" className="brand" aria-label="MLBB Almanac - senarai hero">
-      <svg className="brand__mark" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-        {[2, 9, 16].map((x) =>
-          [3, 8, 13, 18].map((y) => (
-            <rect key={`${x}-${y}`} x={x} y={y} width="6" height="2.5" fill="var(--line-strong)" />
-          ))
-        )}
-        <rect x="16" y="18" width="6" height="2.5" fill="var(--live)" />
-      </svg>
-      <span className="brand__prefix">MLBB</span>
-      <span className="brand__name">ALMANAC</span>
+    <Link to="/heroes" className="brand">
+      <img
+        className="brand__logo"
+        src="/brand/mlbb-a-transparent.svg"
+        alt="MLBB Almanac"
+        width="125"
+        height="38"
+      />
     </Link>
   );
 }

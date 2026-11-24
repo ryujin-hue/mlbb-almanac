@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../docs/brand/assets/mlbb-a.svg" alt="MLBB Almanac" width="360" />
+</div>
+
 # MLBB Almanac — Archive (2016 → 2026)
 
 Ten years of patch history and balance changes for **Mobile Legends: Bang Bang** —
@@ -16,11 +20,11 @@ table, and the live entry is the last one.
 
 | Path | Contents |
 |------|----------|
-| `*.csv` (12 tables) | Core datasets: `patch_index` (86 versions 1.1.23.109.1 → 2.2.16a, incl. auto-detected hotfixes), `hero_changes` (350+ rows with old→new values), `hero_master` (133 heroes), `item_changes` (99), `items_master` (104-item shop snapshot), `mseries` (M1–M7 + announced M8), `esports` (38 events), `systems` (98), `client` (53, incl. 18 collabs), `business` (70), `heroes_extra` (45), `images_manifest` (683) |
+| `*.csv` (12 tables) | Core datasets: `patch_index` (87 versions, 1.1.23.109.1 → 2.2.23, incl. auto-detected hotfixes), `hero_changes` (350 rows with old→new values), `hero_master` (133 heroes), `item_changes` (99), `items_master` (104-item shop snapshot), `mseries` (M1–M7 + announced M8), `esports` (38 events), `systems` (98), `client` (53, incl. 18 collabs), `business` (70), `heroes_extra` (45), `images_manifest` (683) |
 | `references/` | **13 reference/lookup tables** (roles, lanes, lore regions, battle spells with cooldowns, emblem sets, ranked ladder, game modes, change-type taxonomy, host countries, currencies, event types, item categories, data dictionary) |
 | `api/` | **FastAPI application with exactly 78 GET endpoints** + `openapi.json` + static JSON mirror (`api/static/v1/`, one file per endpoint) |
-| `images/` | 683 locally-stored, source-credited images (heroes, items, emblems, spells, events, teams) |
-| `reports/` (5 `.md`) | `research_report.md` (57-scope-item audit: 38 COVERED / 17 PARTIAL / 1 GAP), `meta_history.md` (8 meta eras), `timeline.md` (2016→2026 chronology), `glossary.md` (EN/ID/MS), `academy_summary.md` |
+| `images/` | 683 locally-stored, source-credited images (heroes, items, emblems, spells, events, teams), 734 files in total |
+| 5 `.md` at the root | `research_report.md` (57-scope-item audit: 38 COVERED / 17 PARTIAL / 1 GAP), `meta_history.md` (8 meta eras), `timeline.md` (2016→2026 chronology), `glossary.md` (EN/ID/MS), `academy_summary.md` |
 | `tests/` | pytest suite — asserts the **exactly-78-endpoint** contract and exercises every endpoint |
 | `scripts/` | `update_data.py` (automatic live updater), `build_reference_data.py`, `build_api_artifacts.py` — regenerate all derived data/docs |
 | `updates/` | `last_update.json` (machine-readable status), `season_status.json`, `UPDATELOG.md` (run history) |

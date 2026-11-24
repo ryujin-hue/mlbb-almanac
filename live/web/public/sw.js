@@ -7,7 +7,7 @@
  *   - /api/heroes + /api/deltas: stale-while-revalidate, dan hasilnya
  *     dicache supaya aplikasi tetap punya data saat offline.
  */
-const VERSION = 'mlbb-almanac-v3';
+const VERSION = 'mlbb-almanac-v4';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 
@@ -16,6 +16,7 @@ const SHELL_ASSETS = [
   '/index.html',
   '/manifest.webmanifest',
   '/icon-192.png',
+  '/brand/mlbb-a-transparent.svg',
   // Aset arkib (sejarah patch) - dicache supaya tab Patch boleh dibuka
   // tanpa jaringan.
   '/archive/core.json',
