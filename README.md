@@ -178,3 +178,8 @@ old push cannot overwrite the live site.
 
 - [`mlbb-data-workflow`](https://github.com/ryujin-hue/mlbb-data-workflow) — now `live/`
 - [`mlbb-historical-database`](https://github.com/ryujin-hue/mlbb-historical-database) — now `archive/`
+
+## License
+
+- **Source code:** Licensed under the [MIT License](LICENSE).
+- **Datasets & documentation (`archive/`, `docs/`):** Licensed under [CC BY-SA 4.0](LICENSE-DATA).
