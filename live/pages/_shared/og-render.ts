@@ -2,18 +2,35 @@
  * Rasterizer kad OG - resvg-wasm.
  *
  * WASM tulen, jadi ia boleh jalan dalam Cloudflare Pages Functions tanpa
- * Node. Modul WASM diimport terus daripada pakej; wrangler mem编译nya
- * sebagai modul berasingan (peripheral `rules` dalam wrangler.jsonc).
+ * Node.
+ *
+ * Cara memuat WASM: runtime Cloudflare **melarang** kodegen WASM dinamik.
+ * `WebAssembly.compile()` atau `WebAssembly.instantiate()` dengan bait mentah
+ * akan gagal dengan "Wasm code generation disallowed by embedder". Modul WAJA
+ * yang dibenarkan ialah modul yang sudah dikompil ahead-of-time dan di-import
+ * sebagai modul ES.
+ *
+ * Bundle Pages menyusun import `.wasm` kepada modul berasingan secara
+ * automatik (fail `.wasm` keluar bersama `index.js`), jadi tiada config
+ * `rules` diperlukan - Pages tidak menyokong `rules` langsung.
+ *
+ * Font pula dimuat sebagai aset statik pada runtime dan dihantar kepada
+ * resvg sebagai bait TTF, sebab runtime tiada font sistem.
  */
 import { initWasm, Resvg } from '@resvg/resvg-wasm';
 import wasmModule from '@resvg/resvg-wasm/index_bg.wasm';
 
-let initialized = false;
-
 /** Nama keluarga font yang digunakan pada kad. */
 export const OG_FONT_FAMILY = 'DejaVu Sans';
 
-async function ensureWasm(): Promise<void> {
+let initialized = false;
+
+/**
+ * Inisialisasi WASM - sekali sahaja per isolate.
+ *
+ * Modul WAJA sudah dikompil oleh runtime, jadi ini hanya instantiate.
+ */
+export async function ensureWasm(): Promise<void> {
   if (initialized) return;
   await initWasm(wasmModule as unknown as WebAssembly.Module);
   initialized = true;

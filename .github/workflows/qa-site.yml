@@ -6,6 +6,7 @@ on:
     paths:
       - "live/web/**"
       - "live/worker/**"
+      - "live/pages/**"
       - "live/tools/**"
       - "live/tests/**"
       - "packages/shared/**"

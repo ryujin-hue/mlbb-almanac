@@ -138,7 +138,7 @@ export const onRequest: PagesFunction<OgEnv> = async ({ params, request, env }) 
   const workerOrigin = (env.WORKER_ORIGIN || DEFAULT_WORKER_ORIGIN).replace(/\/+$/, '');
 
   try {
-    // 1. Font.
+    // 1. Font. WASM pula sudah dimuat sebagai modul (lihat `_shared/og-render.ts`).
     const fontResponse = await cachedFetch(
       new Request(`${origin}${FONT_PATH}`),
       `${origin}${FONT_PATH}`,

@@ -1,15 +1,5 @@
 {
   "name": "mlbb-almanac",
   "pages_build_output_dir": "../site",
-  "compatibility_date": "2026-10-22",
-  // Modul WASM dikompil sebagai modul berasingan (bukan dibungkus dalam
-  // JS). resvg-wasm memerlukan ini - tanpanya, wrangler akan cuba memuat
-  // .wasm sebagai modul JS dan bundle akan jadi 2.4 MB.
-  "rules": [
-    {
-      "type": "CompiledWasm",
-      "globs": ["**/*.wasm"],
-      "fallthrough": false
-    }
-  ]
+  "compatibility_date": "2026-10-22"
 }

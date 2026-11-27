@@ -92,8 +92,12 @@ Kad dijana **pada masa permintaan**, bukan semasa build - supaya kadar
 win/pick/ban sentiasa mengikut snapshot terkini.
 
 - Rasterizer: `resvg-wasm` (WASM tulen - jalan dalam Workers tanpa Node).
-  Modul WASM diimport terus; `wrangler.jsonc` perlukan rule
-  `CompiledWasm`, tanpanya bundle jadi 2.4 MB.
+  Modul `.wasm` diimport terus (`import ... from '@resvg/resvg-wasm/index_bg.wasm'`)
+  dan bundle Pages mengeluarkannya sebagai modul berasingan. Ini **wajib**:
+  runtime Cloudflare melarang kodegen WASM dinamik, jadi `WebAssembly.compile()`
+  atau `initWasm(bait mentah)` akan gagal dengan *"Wasm code generation
+  disallowed by embedder"*. Config Pages tidak menyokong rule `CompiledWasm`,
+  tetapi bundle Pages menghaluskannya secara automatik.
 - Font: DejaVu Sans Bold (lesen permissive) di dalam `site/og/` -
   Worker/Workers tiada font sistem, jadi font mesti datang sendiri.
 - Portrait: PNG arkib daripada repo awam (`raw.githubusercontent.com`).

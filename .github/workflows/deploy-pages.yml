@@ -22,7 +22,10 @@ on:
     paths:
       - "live/web/**"
       - "live/pages/**"
+      - "live/tools/**"
       - "packages/shared/**"
+      # Arkib dibina daripada archive/ - kemas kini harian mesti sampai ke laman.
+      - "archive/**"
       - ".github/workflows/deploy-pages.yml"
 
 permissions:
@@ -57,31 +60,41 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Pages Functions dibungkus dengan esbuild. resvg-wasm (rasterizer
+      # WASM untuk kad OG) diimport sebagai modul `.wasm`, jadi bundle
+      # Pages menghasilkan index.js + satu fail .wasm berasingan.
+      - name: Install pages dependencies
+        working-directory: live/pages
+        run: npm install --no-audit --no-fund
+
       - name: Build web (site/)
         working-directory: live/web
         run: |
           npm ci --no-audit --no-fund
           npm run build
 
-      # Pages Functions membungkus themselves dengan esbuild - resvg-wasm
-      # (WASM rasterizer untuk kad OG) mesti ada dalam node_modules.
-      - name: Install pages dependencies
-        working-directory: live/pages
-        run: npm install --no-audit --no-fund
-
       - name: Semak Pages Functions dibina dengan baik
         working-directory: live/pages
         run: |
           npm run typecheck
-          # resvg-wasm mesti diimport sebagai modul WASM berasingan -
-          # tanpa rule CompiledWasm, bundle akan jadi 2.4 MB.
           npx --yes wrangler@4.152.0 pages functions build --outdir=/tmp/pg-build
           test -f /tmp/pg-build/index.js || { echo "bundle Pages Functions hilang"; exit 1; }
-          if grep -q "index_bg.wasm" /tmp/pg-build/index.js; then
-            echo "Modul WASM dirujuk sebagai fail berasingan ✓"
-          else
-            echo "::warning::rujukan modul WASM tidak dijumpai - semak semula"
-          fi
+
+          # Skrip JS mesti KECIL. Runtime Cloudflare melarang kodegen WASM
+          # dinamik, jadi modul WAJA mesti di-import sebagai modul (bukan
+          # bait mentah yang di-fetch pada runtime) - esbuild Pages
+          # mengeluarkannya sebagai fail .wasm berasingan.
+          jskb=$(du -sk /tmp/pg-build/index.js | cut -f1)
+          echo "bundle JS Pages Functions: ${jskb} KB"
+          test "$jskb" -lt 400 || { echo "Bundle JS kegedean"; exit 1; }
+
+          wasmfile=$(find /tmp/pg-build -maxdepth 1 -name '*.wasm' | head -1)
+          test -n "$wasmfile" || { echo "Modul WASM hilang - kad OG tidak berfungsi"; exit 1; }
+          echo "modul WASM: $(basename "$wasmfile") ($(du -sk "$wasmfile" | cut -f1) KB)"
+
+          # Font TTF mesti ada dalam site/ - runtime tiada font sistem.
+          test -f ../site/og/DejaVuSans-Bold.ttf || { echo "site/og/DejaVuSans-Bold.ttf hilang"; exit 1; }
+          echo "Aset kad OG OK."
 
       - name: Semak secret Cloudflare
         id: secret
