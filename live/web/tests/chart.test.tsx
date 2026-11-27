@@ -67,6 +67,44 @@ describe('HeroMetaCorrelationChart', () => {
     expect(screen.getByText(/2 peristiwa patch/)).toBeTruthy();
   });
 
+  it('patch di luar julat carta tidak dikira sebagai peristiwa yang dipapar', () => {
+    render(
+      <HeroMetaCorrelationChart
+        liveTrendData={TREND}
+        patchHistory={[
+          ...PATCHES,
+          {
+            date: '2020-09-22',
+            patchVersion: '1.5.16',
+            changeType: 'adjustment',
+            summary: 'Project NEXT phase 1 revamp',
+          },
+        ]}
+      />
+    );
+    // Hanya patch pada tarikh yang ada dalam siri live dikira.
+    expect(screen.getByText(/2 peristiwa patch/)).toBeTruthy();
+    expect(screen.getByText(/1 patch lama di luar julat carta/)).toBeTruthy();
+  });
+
+  it('tiada patch dalam julat => tiada legenda patch', () => {
+    render(
+      <HeroMetaCorrelationChart
+        liveTrendData={TREND}
+        patchHistory={[
+          {
+            date: '2020-09-22',
+            patchVersion: '1.5.16',
+            changeType: 'adjustment',
+            summary: 'Project NEXT phase 1 revamp',
+          },
+        ]}
+      />
+    );
+    expect(screen.getByText(/0 peristiwa patch/)).toBeTruthy();
+    expect(screen.queryByText('Buff')).toBeNull();
+  });
+
   it('tunjuk legenda patch', () => {
     render(<HeroMetaCorrelationChart liveTrendData={TREND} patchHistory={PATCHES} />);
     expect(screen.getByText('Buff')).toBeTruthy();

@@ -210,14 +210,33 @@ export function HeroMetaCorrelationChart({
 
   const points = useMemo(() => [...liveTrendData], [liveTrendData]);
   const events = useMemo(() => [...patchHistory], [patchHistory]);
-  const eventsByDate = useMemo(() => groupPatchHistoryByDate(events), [events]);
+
+  /**
+   * ReferenceLine hanya boleh dilukis pada tarikh yang memang ada dalam
+   * siri live. Snapshot KV hanya menyimpan ~30 hari terakhir, manakala
+   * arkib patch boleh berdekad-dekad lama (contoh "1.5.16 / 2020-09-22").
+   * Event di luar julat tidak boleh dilukis, jadi ia dikecualikan:
+   * menghitungnya sebagai peristiwa patch yang "dipapar" tanpa garis
+   * menegak yang sepadan akan mengelirukan.
+   */
+  const pointDates = useMemo(() => new Set(points.map((point) => point.date)), [points]);
+  const visibleEvents = useMemo(
+    () => events.filter((event) => pointDates.has(event.date)),
+    [events, pointDates]
+  );
+  const outsideRangeCount = events.length - visibleEvents.length;
+
+  const eventsByDate = useMemo(
+    () => groupPatchHistoryByDate(visibleEvents),
+    [visibleEvents]
+  );
 
   const visibleSeries = SERIES.filter((series) => !hidden[series.key]);
   const tickStep = Math.max(
     1,
     Math.ceil(points.length / (isMobile ? 4 : 8))
   );
-  const showPatchLabels = events.length > 0 && events.length <= (isMobile ? 4 : 8);
+  const showPatchLabels = visibleEvents.length > 0 && visibleEvents.length <= (isMobile ? 4 : 8);
 
   const toggle = (key: SeriesKey) => {
     setHidden((previous) => ({ ...previous, [key]: !previous[key] }));
@@ -251,7 +270,10 @@ export function HeroMetaCorrelationChart({
             {heroName ? `${heroName} · patch vs meta` : 'Patch vs meta'}
           </h3>
           <p className="m-0 text-xs text-muted">
-            {points.length} titik · {events.length} peristiwa patch
+            {points.length} titik · {visibleEvents.length} peristiwa patch
+            {outsideRangeCount > 0
+              ? ` · ${outsideRangeCount} patch lama di luar julat carta`
+              : ''}
           </p>
         </div>
       </div>
@@ -296,6 +318,10 @@ export function HeroMetaCorrelationChart({
               interval={tickStep - 1}
               tickFormatter={(value: string) => (isMobile ? compactDate(value) : value)}
               minTickGap={8}
+              // Tick pertama dan terakhir diletak pada tengah point, jadi
+              // label hujung akan melimpah keluar dari SVG dan terpotong.
+              // Padding ini menyisakan ruang untuk kedua-duanya.
+              padding={{ left: 6, right: 34 }}
             />
             <YAxis
               tick={{ fill: '#8B9BB4', fontSize: 11 }}
@@ -317,7 +343,7 @@ export function HeroMetaCorrelationChart({
               )}
             />
 
-            {events.map((event) => (
+            {visibleEvents.map((event) => (
               <ReferenceLine
                 key={`${event.patchVersion}-${event.date}-${event.changeType}`}
                 x={event.date}
@@ -353,7 +379,7 @@ export function HeroMetaCorrelationChart({
       </div>
 
       {/* Legenda patch - kekal jelas walaupun label dilangkau. */}
-      {events.length > 0 ? (
+      {visibleEvents.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3 text-[11px] text-muted">
           {(['buff', 'nerf', 'adjustment'] as PatchChangeType[]).map((type) => (
             <span key={type} className="flex items-center gap-1.5">

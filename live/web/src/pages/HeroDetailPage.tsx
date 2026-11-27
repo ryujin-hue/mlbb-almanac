@@ -126,7 +126,9 @@ export function HeroDetailPage({
     setTrendStatus('loading');
     setTrendError(null);
 
-    fetchJson<HeroTrendResponse>(API.heroTrend(heroId), { signal: controller.signal })
+    // 30 hari - julat maksimum endpoint. Semakin luas, semakin banyak
+    // peristiwa patch recent boleh dilukis pada paksi yang sama.
+    fetchJson<HeroTrendResponse>(API.heroTrend(heroId, 30), { signal: controller.signal })
       .then((data) => {
         if (cancelled) return;
         setTrend(data);
@@ -488,8 +490,9 @@ export function HeroDetailPage({
             </div>
             <p className="panel__foot" style={{ marginTop: 0 }}>
               Garis menegak warna = peristiwa patch (hijau buff, merah nerf, kuning
-              adjustment/rework). Satu titik = satu hari dari snapshot KV. Baris
-              arkib tanpa tarikh tepat dilangkau - jumlahnya:{' '}
+              adjustment/rework) yang tarikhnya berada dalam julat carta; patch
+              lama diluar julat tidak dilukis. Satu titik = satu hari dari snapshot
+              KV. Baris arkib tanpa tarikh tepat dilangkau - jumlahnya:{' '}
               {history.length - chartPatches.length} daripada {history.length}.
             </p>
           </section>
