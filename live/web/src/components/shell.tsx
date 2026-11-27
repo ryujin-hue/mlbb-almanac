@@ -4,9 +4,10 @@
  * Susunan: Heroes dulu, Meta kemudian - senarai hero ialah kerja harian,
  * ringkasan meta adalah rujukan.
  *
- * Desktop  : MLBB ALMANAC | Heroes Meta Movers Patches Patch Notes Items Data
+ * Desktop  : MLBB ALMANAC | Heroes Meta Movers Patches Patch Notes Items
+ *            Draft Data
  * Mobile   : bar bawah Heroes | Meta | Movers | Patches | More (Patch Notes,
- *            Items, Data)
+ *            Items, Draft, Data)
  */
 import { useEffect, useState } from 'react';
 
@@ -20,6 +21,7 @@ export const NAV_ITEMS = [
   { path: '/patches', label: 'Patches' },
   { path: '/patch-notes', label: 'Patch Notes' },
   { path: '/items', label: 'Items' },
+  { path: '/draft', label: 'Draft' },
   { path: '/data', label: 'Data' },
 ] as const;
 
@@ -32,7 +34,11 @@ const MOBILE_NAV = [
 
 /** Item yang hanya muncul dalam sheet "More" pada mobile. */
 const MORE_ITEMS = NAV_ITEMS.filter(
-  (item) => item.path === '/patch-notes' || item.path === '/items' || item.path === '/data'
+  (item) =>
+    item.path === '/patch-notes' ||
+    item.path === '/items' ||
+    item.path === '/draft' ||
+    item.path === '/data'
 );
 
 export const FOCUS_SEARCH_EVENT = 'almanac:focus-search';

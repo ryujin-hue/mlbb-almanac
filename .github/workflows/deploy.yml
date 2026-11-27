@@ -107,6 +107,27 @@ jobs:
             --data "$payload" | jq -r '.success'
           echo "Secret PANDASCORE_API_TOKEN ditetapkan."
 
+      # Secret refresh manual. Tanpa secret ini, `POST /api/refresh` ditutup
+      # (503) - ia menulis ke KV, jadi ia mesti sentiasa proving.
+      - name: Set secret runtime Worker (REFRESH_API_TOKEN)
+        if: steps.secret.outputs.skip != 'true'
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          REFRESH_TOKEN: ${{ secrets.REFRESH_API_TOKEN }}
+        run: |
+          if [ -z "$REFRESH_TOKEN" ]; then
+            echo "::warning::Secret REFRESH_API_TOKEN belum ditetapkan - POST /api/refresh akan ditutup (503)."
+            exit 0
+          fi
+          payload=$(jq -nc --arg t "$REFRESH_TOKEN" '{name:"REFRESH_API_TOKEN",text:$t,type:"secret_text"}')
+          curl -sS -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/workers/scripts/mlbb-data-workflow/secrets" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$payload" | jq -r '.success'
+          echo "Secret REFRESH_API_TOKEN ditetapkan."
+
       - name: Deploy ke Cloudflare Workers
         if: steps.secret.outputs.skip != 'true'
         uses: cloudflare/wrangler-action@v3

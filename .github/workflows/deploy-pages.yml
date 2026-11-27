@@ -63,6 +63,26 @@ jobs:
           npm ci --no-audit --no-fund
           npm run build
 
+      # Pages Functions membungkus themselves dengan esbuild - resvg-wasm
+      # (WASM rasterizer untuk kad OG) mesti ada dalam node_modules.
+      - name: Install pages dependencies
+        working-directory: live/pages
+        run: npm install --no-audit --no-fund
+
+      - name: Semak Pages Functions dibina dengan baik
+        working-directory: live/pages
+        run: |
+          npm run typecheck
+          # resvg-wasm mesti diimport sebagai modul WASM berasingan -
+          # tanpa rule CompiledWasm, bundle akan jadi 2.4 MB.
+          npx --yes wrangler@4.152.0 pages functions build --outdir=/tmp/pg-build
+          test -f /tmp/pg-build/index.js || { echo "bundle Pages Functions hilang"; exit 1; }
+          if grep -q "index_bg.wasm" /tmp/pg-build/index.js; then
+            echo "Modul WASM dirujuk sebagai fail berasingan ✓"
+          else
+            echo "::warning::rujukan modul WASM tidak dijumpai - semak semula"
+          fi
+
       - name: Semak secret Cloudflare
         id: secret
         run: |

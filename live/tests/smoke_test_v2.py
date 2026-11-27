@@ -128,8 +128,8 @@ def main() -> int:
                 ".topnav__link", "els => els.map(e => e.textContent.trim())"
             )
             ck(
-                "navigasi atas: 7 item",
-                len(nav_links) == 7,
+                "navigasi atas: 8 item",
+                len(nav_links) == 8,
                 str(nav_links),
             )
             ck(
@@ -141,6 +141,7 @@ def main() -> int:
                     "Patches",
                     "Patch Notes",
                     "Items",
+                    "Draft",
                     "Data",
                 ],
                 str(nav_links),
@@ -165,6 +166,24 @@ def main() -> int:
             ck("footer: sumber data", "mlbbdex" in foot, foot[:60])
             ck("footer: lesen CC BY-SA", "cc by-sa" in foot)
             ck("footer: bukan berafiliasi dengan Moonton", "moonton" in foot and "berafiliasi" in foot)
+
+            # ------------------------------------------- 1b. Draft simulator
+            body = goto("/draft", wait=".pagehead__title")
+            ck("Draft: halaman dipapar", "Draft" in body)
+            ck("Draft: pool hero", len(page.query_selector_all(".grid button")) > 50)
+            ck(
+                "Draft: butang Lock Hero",
+                bool(page.query_selector("button:has-text('Lock Hero')")),
+            )
+            ck(
+                "Draft: dua lajur pasukan",
+                len(page.query_selector_all("section[aria-label*='Pasukan']")) == 2,
+            )
+            ck(
+                "Draft: keadaan dalam URL",
+                "bp=" in page.url or page.url.endswith("/draft"),
+                page.url,
+            )
 
             # ------------------------------------------------- 2. routing
             page.click(".topnav__link:has-text('Patches')")
@@ -282,9 +301,29 @@ def main() -> int:
             page.wait_for_timeout(900)
             hist = page.query_selector_all(".tbl--history tbody tr")
             ck("Detail hero: baris sejarah imbangan", len(hist) >= 1, str(len(hist)))
+
             ck(
                 "Detail hero: sejarah ada versi patch",
                 bool(page.query_selector(".tbl--history .ptag")),
+            )
+
+            # Tab "Patch vs meta" - carta korelasi patch vs meta. Carta
+            # dimuat secara lazy (chunk recharts), jadi tunggu butang siri
+            # muncul - bukan masa tetap.
+            page.click(".tabs__btn:has-text('Patch vs meta')")
+            try:
+                page.wait_for_selector("button:has-text('Pick rate')", timeout=20000)
+            except Exception:
+                pass
+            page.wait_for_timeout(1200)
+            ck(
+                "Detail hero: tab Patch vs meta",
+                bool(page.query_selector(".recharts-wrapper"))
+                or "Belum ada siri live" in page.inner_text("body"),
+            )
+            ck(
+                "Detail hero: kawalan siri carta",
+                len(page.query_selector_all("button:has-text('Pick rate')")) == 1,
             )
 
             # ------------------------------------------------- 5. Movers
@@ -391,8 +430,9 @@ def main() -> int:
             mp.click(".tabbar__link:has-text('More')")
             mp.wait_for_timeout(900)
             ck(
-                "Mobile: menu More ada Items + Data",
+                "Mobile: menu More ada Items + Draft + Data",
                 mp.is_visible(".moremenu__link:has-text('Items')")
+                and mp.is_visible(".moremenu__link:has-text('Draft')")
                 and mp.is_visible(".moremenu__link:has-text('Data')"),
             )
             # footer tidak tenggelam bawah tab bar

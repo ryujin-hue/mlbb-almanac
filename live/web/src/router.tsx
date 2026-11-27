@@ -4,7 +4,7 @@
  * Tiada dependency: guna History API + satu event supaya React boleh
  * mengikuti perubahan URL. Route:
  *
- *   /                  Senarai hero (halaman假如 masuk)
+ *   /                  Senarai hero (halaman masuk)
  *   /heroes            Senarai hero (sama seperti /)
  *   /heroes/:id        Detail hero (Overview | Balance history)
  *   /meta              Ringkasan meta semasa
@@ -13,6 +13,7 @@
  *   /patches/:version  Detail patch
  *   /patch-notes       Patch notes daripada MLBB Hub
  *   /items             Katalog item
+ *   /draft             Draft Pick Simulator 5v5
  *   /data              Data, sumber, snapshot
  *
  * Query string digunakan untuk menyimpan keadaan paparan (rank, sort, carian,
@@ -85,6 +86,7 @@ export type RouteName =
   | 'patch'
   | 'patch-notes'
   | 'items'
+  | 'draft'
   | 'data';
 
 export interface Route {
@@ -110,6 +112,7 @@ export function matchRoute(path: string): Route {
   }
   if (segments[0] === 'patch-notes') return { name: 'patch-notes', params: {} };
   if (segments[0] === 'items') return { name: 'items', params: {} };
+  if (segments[0] === 'draft') return { name: 'draft', params: {} };
   if (segments[0] === 'data') return { name: 'data', params: {} };
   return { name: 'heroes', params: {} };
 }

@@ -1,0 +1,1535 @@
+{
+ "source": "https://mlbb-almanac.pages.dev/api/heroes?rank=all",
+ "captured_at": "2026-11-27",
+ "count": 133,
+ "heroes": [
+  {
+   "id": "aamon",
+   "name": "Aamon",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "akai",
+   "name": "Akai",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "aldous",
+   "name": "Aldous",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "alice",
+   "name": "Alice",
+   "roles": [
+    "Tank",
+    "Mage"
+   ],
+   "lanes": [
+    "Exp",
+    "Jungle"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "alpha",
+   "name": "Alpha",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Jungle",
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "alucard",
+   "name": "Alucard",
+   "roles": [
+    "Fighter",
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "angela",
+   "name": "Angela",
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "argus",
+   "name": "Argus",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "arlott",
+   "name": "Arlott",
+   "roles": [
+    "Fighter",
+    "Assassin"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "atlas",
+   "name": "Atlas",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "aulus",
+   "name": "Aulus",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Jungle",
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "aurora",
+   "name": "Aurora",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "badang",
+   "name": "Badang",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Roam",
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "balmond",
+   "name": "Balmond",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Jungle",
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "bane",
+   "name": "Bane",
+   "roles": [
+    "Fighter",
+    "Mage"
+   ],
+   "lanes": [
+    "Jungle",
+    "Exp"
+   ],
+   "damage_type": "Mixed"
+  },
+  {
+   "id": "barats",
+   "name": "Barats",
+   "roles": [
+    "Tank",
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "baxia",
+   "name": "Baxia",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Jungle",
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "beatrix",
+   "name": "Beatrix",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "belerick",
+   "name": "Belerick",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "benedetta",
+   "name": "Benedetta",
+   "roles": [
+    "Assassin",
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "brody",
+   "name": "Brody",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "bruno",
+   "name": "Bruno",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "carmilla",
+   "name": "Carmilla",
+   "roles": [
+    "Support",
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "cecilion",
+   "name": "Cecilion",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "chang-e",
+   "name": "Chang'e",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "chip",
+   "name": "Chip",
+   "roles": [
+    "Support",
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "chou",
+   "name": "Chou",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp",
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "cici",
+   "name": "Cici",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "claude",
+   "name": "Claude",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "clint",
+   "name": "Clint",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "cyclops",
+   "name": "Cyclops",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "diggie",
+   "name": "Diggie",
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "dyrroth",
+   "name": "Dyrroth",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp",
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "edith",
+   "name": "Edith",
+   "roles": [
+    "Tank",
+    "Marksman"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Mixed"
+  },
+  {
+   "id": "esmeralda",
+   "name": "Esmeralda",
+   "roles": [
+    "Tank",
+    "Mage"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Mixed"
+  },
+  {
+   "id": "estes",
+   "name": "Estes",
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "eudora",
+   "name": "Eudora",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "fanny",
+   "name": "Fanny",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "faramis",
+   "name": "Faramis",
+   "roles": [
+    "Support",
+    "Mage"
+   ],
+   "lanes": [
+    "Mid",
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "floryn",
+   "name": "Floryn",
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "franco",
+   "name": "Franco",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "fredrinn",
+   "name": "Fredrinn",
+   "roles": [
+    "Fighter",
+    "Tank"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "freya",
+   "name": "Freya",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp",
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "gatotkaca",
+   "name": "Gatotkaca",
+   "roles": [
+    "Tank",
+    "Fighter"
+   ],
+   "lanes": [
+    "Roam",
+    "Exp"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "gloo",
+   "name": "Gloo",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Roam",
+    "Exp"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "gord",
+   "name": "Gord",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "granger",
+   "name": "Granger",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "grock",
+   "name": "Grock",
+   "roles": [
+    "Tank",
+    "Fighter"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "guinevere",
+   "name": "Guinevere",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "gusion",
+   "name": "Gusion",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle",
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "hanabi",
+   "name": "Hanabi",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "hanzo",
+   "name": "Hanzo",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "harith",
+   "name": "Harith",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "harley",
+   "name": "Harley",
+   "roles": [
+    "Assassin",
+    "Mage"
+   ],
+   "lanes": [
+    "Jungle",
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "hayabusa",
+   "name": "Hayabusa",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "helcurt",
+   "name": "Helcurt",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle",
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "hilda",
+   "name": "Hilda",
+   "roles": [
+    "Fighter",
+    "Tank"
+   ],
+   "lanes": [
+    "Roam",
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "hirara",
+   "name": "Hirara",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "hylos",
+   "name": "Hylos",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "irithel",
+   "name": "Irithel",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "ixia",
+   "name": "Ixia",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "jawhead",
+   "name": "Jawhead",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp",
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "johnson",
+   "name": "Johnson",
+   "roles": [
+    "Tank",
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "joy",
+   "name": "Joy",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "julian",
+   "name": "Julian",
+   "roles": [
+    "Assassin",
+    "Fighter"
+   ],
+   "lanes": [
+    "Jungle",
+    "Exp"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "kadita",
+   "name": "Kadita",
+   "roles": [
+    "Mage",
+    "Assassin"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "kagura",
+   "name": "Kagura",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "kaja",
+   "name": "Kaja",
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "kalea",
+   "name": "Kalea",
+   "roles": [
+    "Support",
+    "Fighter"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "karina",
+   "name": "Karina",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "karrie",
+   "name": "Karrie",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "khaleed",
+   "name": "Khaleed",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Roam",
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "khufra",
+   "name": "Khufra",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Mixed"
+  },
+  {
+   "id": "kimmy",
+   "name": "Kimmy",
+   "roles": [
+    "Marksman",
+    "Mage"
+   ],
+   "lanes": [
+    "Mid",
+    "Gold"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "lancelot",
+   "name": "Lancelot",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "lapu-lapu",
+   "name": "Lapu-Lapu",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "layla",
+   "name": "Layla",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "leomord",
+   "name": "Leomord",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "lesley",
+   "name": "Lesley",
+   "roles": [
+    "Marksman",
+    "Assassin"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "ling",
+   "name": "Ling",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "lolita",
+   "name": "Lolita",
+   "roles": [
+    "Support",
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "lukas",
+   "name": "Lukas",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp",
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "lunox",
+   "name": "Lunox",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "luo-yi",
+   "name": "Luo Yi",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "lylia",
+   "name": "Lylia",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "marcel",
+   "name": "Marcel",
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "martis",
+   "name": "Martis",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Jungle",
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "masha",
+   "name": "Masha",
+   "roles": [
+    "Fighter",
+    "Tank"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "mathilda",
+   "name": "Mathilda",
+   "roles": [
+    "Support",
+    "Assassin"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "melissa",
+   "name": "Melissa",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Mixed"
+  },
+  {
+   "id": "minotaur",
+   "name": "Minotaur",
+   "roles": [
+    "Tank",
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "minsitthar",
+   "name": "Minsitthar",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "miya",
+   "name": "Miya",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "moskov",
+   "name": "Moskov",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "nana",
+   "name": "Nana",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "natalia",
+   "name": "Natalia",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle",
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "natan",
+   "name": "Natan",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "nolan",
+   "name": "Nolan",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "novaria",
+   "name": "Novaria",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "obsidia",
+   "name": "Obsidia",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "odette",
+   "name": "Odette",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "paquito",
+   "name": "Paquito",
+   "roles": [
+    "Fighter",
+    "Assassin"
+   ],
+   "lanes": [
+    "Exp",
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "pharsa",
+   "name": "Pharsa",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "phoveus",
+   "name": "Phoveus",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Mixed"
+  },
+  {
+   "id": "popol-and-kupa",
+   "name": "Popol and Kupa",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Jungle",
+    "Gold"
+   ],
+   "damage_type": "Mixed"
+  },
+  {
+   "id": "rafaela",
+   "name": "Rafaela",
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "roger",
+   "name": "Roger",
+   "roles": [
+    "Fighter",
+    "Marksman"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "ruby",
+   "name": "Ruby",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "saber",
+   "name": "Saber",
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle",
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "selena",
+   "name": "Selena",
+   "roles": [
+    "Assassin",
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "silvanna",
+   "name": "Silvanna",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "sora",
+   "name": "Sora",
+   "roles": [
+    "Fighter",
+    "Assassin"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "sun",
+   "name": "Sun",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp",
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "suyou",
+   "name": "Suyou",
+   "roles": [
+    "Assassin",
+    "Fighter"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "terizla",
+   "name": "Terizla",
+   "roles": [
+    "Fighter",
+    "Tank"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "thamuz",
+   "name": "Thamuz",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp",
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "tigreal",
+   "name": "Tigreal",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Roam"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "uranus",
+   "name": "Uranus",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "vale",
+   "name": "Vale",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "valentina",
+   "name": "Valentina",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "valir",
+   "name": "Valir",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "vexana",
+   "name": "Vexana",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "wanwan",
+   "name": "Wanwan",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "Gold"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "x-borg",
+   "name": "X.Borg",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "xavier",
+   "name": "Xavier",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "yi-sun-shin",
+   "name": "Yi Sun-shin",
+   "roles": [
+    "Assassin",
+    "Marksman"
+   ],
+   "lanes": [
+    "Jungle"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "yin",
+   "name": "Yin",
+   "roles": [
+    "Fighter",
+    "Assassin"
+   ],
+   "lanes": [
+    "Jungle",
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "yu-zhong",
+   "name": "Yu Zhong",
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  },
+  {
+   "id": "yve",
+   "name": "Yve",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "zetian",
+   "name": "Zetian",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "zhask",
+   "name": "Zhask",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "zhuxin",
+   "name": "Zhuxin",
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "Mid"
+   ],
+   "damage_type": "Magic"
+  },
+  {
+   "id": "zilong",
+   "name": "Zilong",
+   "roles": [
+    "Fighter",
+    "Assassin"
+   ],
+   "lanes": [
+    "Exp"
+   ],
+   "damage_type": "Physical"
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "mlbb-almanac-pages",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cloudflare Pages Functions untuk MLBB Almanac - proxy ke Worker + penjana kad OG.",
+  "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251022.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

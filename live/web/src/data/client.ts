@@ -123,12 +123,48 @@ export interface DeltaResponse extends MetaMovers {
 export const API = {
   heroIndex: (rank: string) => `/api/heroes?rank=${encodeURIComponent(rank)}`,
   heroDetail: (id: string) => `/api/hero?id=${encodeURIComponent(id)}`,
+  heroTrend: (id: string, limit = 14) =>
+    `/api/hero-trend?id=${encodeURIComponent(id)}&limit=${limit}`,
+  counters: () => '/api/counters',
   deltas: (window: string) => `/api/deltas?window=${encodeURIComponent(window)}`,
   snapshots: () => '/api/snapshots',
   meta: () => '/api/meta',
   patchNotes: () => '/api/patch-notes',
   tournaments: () => '/api/tournaments',
 } as const;
+
+/** Respons `/api/hero-trend` - satu titik per hari. */
+export interface HeroTrendResponse {
+  available: boolean;
+  reason?: string;
+  hero: string;
+  count: number;
+  points: {
+    version: string;
+    date: string;
+    winRate: number | null;
+    pickRate: number | null;
+    banRate: number | null;
+    tier: string | null;
+  }[];
+}
+
+/** Satu edge counter: "from" menang lawan "to". */
+export interface CounterEdge {
+  from: string;
+  to: string;
+  strength: number | null;
+  advantage: number | null;
+  source: string | null;
+}
+
+/** Respons `/api/counters`. */
+export interface CountersResponse {
+  available: boolean;
+  count: number;
+  edges: CounterEdge[];
+  generated_at_utc: string | null;
+}
 
 // ------------------------------------------------------------------ memory
 

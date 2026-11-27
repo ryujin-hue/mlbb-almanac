@@ -78,9 +78,64 @@ external domains"). Jadi `pages/functions/` memproksi `/api/*` dan `/audio/*`
 ke Worker. Browser kekal satu origin - tiada CORS, tiada perubahan client,
 `connect-src 'self'` kekal.
 
+Tiga fungsi Pages:
+
+| Fungsi | Tujuan |
+|---|---|
+| `api/[[path]].ts` | proksi ke Worker |
+| `audio/[[path]].ts` | proksi ke Worker (Range 206 dikekalkan) |
+| `heroes/[hero_name]/og.ts` | kad Open Graph 1200x630 PNG |
+
+### Kad OG
+
+Kad dijana **pada masa permintaan**, bukan semasa build - supaya kadar
+win/pick/ban sentiasa mengikut snapshot terkini.
+
+- Rasterizer: `resvg-wasm` (WASM tulen - jalan dalam Workers tanpa Node).
+  Modul WASM diimport terus; `wrangler.jsonc` perlukan rule
+  `CompiledWasm`, tanpanya bundle jadi 2.4 MB.
+- Font: DejaVu Sans Bold (lesen permissive) di dalam `site/og/` -
+  Worker/Workers tiada font sistem, jadi font mesti datang sendiri.
+- Portrait: PNG arkib daripada repo awam (`raw.githubusercontent.com`).
+  Portrait live ialah WebP, dan resvg tidak boleh decode WebP - jadi
+  imej arkib (PNG) yang digunakan.
+- Semua sumber (hero, arkib, portrait, font) di-cache dalam Cache API
+  Cloudflare.
+- Hero tidak dijumpai -> kad lalai, tetap PNG (bukan 404 HTML).
+
 `pages/wrangler.jsonc` (bukan `.toml`) - wrangler 4.152 mengabaikan
 `wrangler.toml` dalam subdirektori dan mengambil `wrangler.jsonc` yang paling
 dekat di direktori kerja semasa.
+
+## Endpoint Worker
+
+| Endpoint | Fungsi |
+|---|---|
+| `GET /api/meta` | status runtime, patch semasa, jumlah hero |
+| `GET /api/heroes?rank=` | senarai hero + kadar + tier |
+| `GET /api/hero?id=` | detail satu hero |
+| `GET /api/hero-trend?id=&limit=` | siri win/pick/ban satu hero merentas snapshot |
+| `GET /api/counters` | matriks counter ("from" menang lawan "to") |
+| `GET /api/deltas?window=&threshold=` | movers antara dua snapshot |
+| `GET /api/snapshots` | senarai versi snapshot |
+| `GET /api/patch-notes` | artikel MLBB Hub |
+| `GET /api/tournaments` | jadual MLBB (PandaScore) |
+| `POST /api/refresh` | refresh manual - **Bearer `REFRESH_API_TOKEN`** |
+
+`POST /api/refresh` DITUTUP bila `REFRESH_API_TOKEN` tiada (503). Versi
+lama membenarkan semua orang; refresh menulis ke KV, jadi ia mesti sentiasa
+proving. `GET /api/refresh` kini 405.
+
+## Kunci hero
+
+Tiga sumber menulis nama hero dengan ejaan berbeza: arkib (`Chang'e`),
+live KV (`chang-e`), UI (`Chang'e`). Semuanya dinormalisasi melalui satu
+fungsi - `packages/shared/heroKey.ts` - supaya senarai, sejarah imbangan
+dan carta tidak hilang hero.
+
+Testnya membandingkan `archive/hero_master.csv` (133 nama) dengan id dalam
+snapshot live (133 id) dan menuntut **100% keselarasan** - bukan "hampir
+sama".
 
 ## Perkara yang mudah pecah
 
@@ -95,6 +150,12 @@ dekat di direktori kerja semasa.
   "50,0%" walaupun nilai sebenar berbeza.
 - **Baris CSV ragged**: `DictReader` menghasilkan key `None` untuk kolum
   berlebihan. Buang key itu sebelum menulis semula.
+- **Tarikh arkib tidak seragam**: 46 baris `hero_changes` bertarikh
+  "2016 (year-only, day UNVERIFIED)" dan 83 baris tiada versi patch. Baris
+  seperti itu dilangkau dalam carta - bukan dipaksa ke tarikh fake.
+- **NaN dalam rate**: `Number(null)` ialah 0, jadi `null` tidak boleh
+  dilepaskan terus ke `Number()`. `safeRate()` dalam `packages/shared`
+  menapis NaN, Infinity, null dan string bukan nombor.
 
 ## Sumber luar (Worker)
 

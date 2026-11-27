@@ -41,7 +41,7 @@ sekarang, gimana bentuk yang disarankan, dan dengan urutan apa dikerjakan.
 | **G5** | **Tanpa service worker / manifest.** | Tidak bisa offline, tidak installable. | Tidak ada `sw.js` / `manifest.webmanifest` di `site/`. |
 | **G6** | **Tanpa persistensi lokal.** | Favorit & catatan harus disimpan ulang tiap reload. | Tidak ada-state lokal di situs lama. |
 | **G7** | **`counter_edges` tidak konsisten antar jalur.** Worker = 1.047 edge, snapshot statis = 1.166, dan yang benar menurut kontrak v1.7 = 1.563 (dengan `weak` + fallback `relations`). Worker cuma memakai sisi `strong`. | Sisi "hero yang mengalahkannya" kehilangan ~400 edge. | Perbandingan `statistics.json` vs output worker. |
-| **G8** | **Tidak ada type safety di data layer.** `site/assets/js/data.js` manipulating `heroes[].counters` yangroduction sengaja dik损坏, lalu dibuang pakai log integritas. | Rapuh; setiap field baru butuh-edit manual di 3 tempat. | Komentar di `data.js` baris "counters_raw". |
+| **G8** | **Tidak ada type safety di data layer.** `site/assets/js/data.js` memanipulasi `heroes[].counters` yang sengaja dirosakkan, lalu dibuang pakai log integritas. | Rapuh; setiap field baru butuh-edit manual di 3 tempat. | Komentar di `data.js` baris "counters_raw". |
 
 ### 1.3 Yang sudah benar dan harus dipertahankan
 

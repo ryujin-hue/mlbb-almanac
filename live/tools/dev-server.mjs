@@ -15,6 +15,8 @@
  *   GET /api/deltas?window=1d|7d|30d
  *   GET /api/snapshots
  *   GET /api/meta
+ *   GET /api/hero-trend?id=<heroId>
+ *   GET /api/counters
  */
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -192,6 +194,54 @@ const server = createServer(async (req, res) => {
             counts: payload.manifest.counts,
           },
         ],
+      });
+    }
+
+    // Tren satu hero - dev server hanya ada satu snapshot, jadi siri
+    // pendek dibina daripada dataset semasa (bentuk sama seperti Worker).
+    if (pathname === '/api/hero-trend') {
+      const id = url.searchParams.get('id') || '';
+      const { storedAt, version, payload } = await loadDataset();
+      const hero = (payload.heroes.heroes || []).find(
+        (entry) => entry.id === id || entry.name === id,
+      );
+      const stats = hero?.stats ?? null;
+      const measured = payload.manifest?.rates_summary?.measured_at_utc ?? null;
+      const points = hero
+        ? [
+            {
+              version,
+              date: measured ?? storedAt,
+              winRate: stats.win_rate ?? null,
+              pickRate: stats.pick_rate ?? null,
+              banRate: stats.ban_rate ?? null,
+              tier: stats.tier ?? null,
+            },
+          ]
+        : [];
+      return json(res, {
+        available: points.length > 0,
+        hero: id,
+        count: points.length,
+        points,
+      });
+    }
+
+    // Matriks counter.
+    if (pathname === '/api/counters') {
+      const { payload } = await loadDataset();
+      const edges = (payload.counters?.edges ?? []).map((edge) => ({
+        from: edge.from,
+        to: edge.to,
+        strength: edge.strength ?? null,
+        advantage: edge.advantage_points ?? null,
+        source: edge.source ?? null,
+      }));
+      return json(res, {
+        available: true,
+        count: edges.length,
+        edges,
+        generated_at_utc: payload.manifest?.generated_at_utc ?? null,
       });
     }
 

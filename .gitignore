@@ -31,6 +31,9 @@ live/pages/.wrangler/
 .idea/
 .vscode/
 
+# Hasil ujian (kad OG yang dijana semasa test)
+output/
+
 # Rahsia
 .gh-token
 .env

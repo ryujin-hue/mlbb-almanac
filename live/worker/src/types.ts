@@ -8,6 +8,18 @@ export interface Env {
   ASSETS?: Fetcher;
   UPSTREAM_BASE_URL?: string;
   ALLOWED_ORIGIN?: string;
+  /**
+   * Secret untuk `POST /api/refresh`. Token dihantar sebagai
+   * `Authorization: Bearer <token>` dan dibandingkan constant-time.
+   * Tanpa secret ini, endpoint refresh DITUTUP (503) - bukan dibuka
+   * untuk semua orang.
+   */
+  REFRESH_API_TOKEN?: string;
+  /**
+   * Secret lama (header `X-Refresh-Token`). Disimpan sebagai laluan
+   * sokongan supaya skrip sedia ada tidak terus berfungsi, tetapi
+   * `REFRESH_API_TOKEN` tetap jadi laluan utama.
+   */
   MANUAL_REFRESH_TOKEN?: string;
   CRON_HOUR_UTC?: string;
   DATA_CACHE_SECONDS?: string;

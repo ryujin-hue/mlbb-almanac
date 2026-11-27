@@ -20,6 +20,8 @@ import {
   writePatchNotes,
 } from './lib/patch-notes';
 import { fetchTournaments, readTournaments, writeTournaments } from './lib/tournaments';
+import { authorizeRefresh } from './lib/refresh-auth';
+import { buildHeroTrend, counterEdgesOf } from './lib/hero-trend';
 import type { Env, RuntimeMeta } from './types';
 
 const SOURCE_NAME = 'MLBBDex GitHub mirror';
@@ -74,14 +76,6 @@ function buildBootMeta(env: Env): RuntimeMeta {
     scheduleUtc: `0 ${hour} * * *`,
     lastError: null,
   };
-}
-
-function refreshAllowed(request: Request, env: Env): boolean {
-  const expected = env.MANUAL_REFRESH_TOKEN?.trim();
-  if (!expected) return true;
-
-  const provided = request.headers.get('X-Refresh-Token')?.trim();
-  return Boolean(provided && provided === expected);
 }
 
 async function refreshDataset(env: Env, trigger: string): Promise<RuntimeMeta> {
@@ -477,6 +471,122 @@ async function handleGetHeroIndex(request: Request, env: Env): Promise<Response>
 }
 
 /**
+ * Tren rate satu heroacross beberapa snapshot.
+ *
+ *   GET /api/hero-trend?id=alucard&limit=14
+ *
+ * Setiap snapshot KV mengandungi rate semua hero pada tarikhnya, jadi
+ * siri win/pick/ban boleh dijurkan tanpa simpan data tambahan.
+ */
+async function handleGetHeroTrend(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const id = (url.searchParams.get('id') ?? '').trim();
+
+  if (!id) {
+    return jsonResponse(
+      { error: 'missing_id', message: 'Parameter id wajib diisi.' },
+      400,
+      request,
+      env,
+      { 'Cache-Control': 'no-store' }
+    );
+  }
+
+  const rawLimit = Number(url.searchParams.get('limit'));
+  const limit = Number.isFinite(rawLimit)
+    ? Math.min(Math.max(Math.floor(rawLimit), 2), 30)
+    : 14;
+
+  const index = await readIndex(env.MLBB_KV);
+  const entries = index.entries.slice(0, limit);
+
+  if (entries.length === 0) {
+    return jsonResponse(
+      {
+        available: false,
+        reason: 'no_snapshots',
+        message: 'Belum ada snapshot di KV.',
+        hero: id,
+        points: [],
+      },
+      200,
+      request,
+      env,
+      { 'Cache-Control': 'no-store' }
+    );
+  }
+
+  const snapshots = await Promise.all(
+    entries.map((entry) => readSnapshot(env.MLBB_KV, entry.version))
+  );
+  const present = snapshots.filter((snapshot): snapshot is NonNullable<typeof snapshot> =>
+    Boolean(snapshot)
+  );
+
+  const points = buildHeroTrend(present, id);
+
+  return jsonResponse(
+    {
+      available: points.length > 0,
+      reason: points.length > 0 ? undefined : 'hero_not_in_snapshots',
+      hero: id,
+      count: points.length,
+      points,
+    },
+    200,
+    request,
+    env,
+    {
+      'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600',
+    }
+  );
+}
+
+/**
+ * Matriks counter - "hero A menang lawan hero B".
+ *
+ *   GET /api/counters
+ *
+ * Draft simulator guna ini untuk mencadangkan counter kepada hero yang
+ * dikunci lawan.
+ */
+async function handleGetCounters(request: Request, env: Env): Promise<Response> {
+  const stored = await readDataset(env.MLBB_KV);
+  if (!stored) {
+    return jsonResponse(
+      { error: 'dataset_unavailable', message: 'Belum ada snapshot di KV.' },
+      503,
+      request,
+      env,
+      { 'Cache-Control': 'no-store' }
+    );
+  }
+
+  const edges = counterEdgesOf(stored.payload);
+
+  return jsonResponse(
+    {
+      available: true,
+      count: edges.length,
+      edges: edges.map((edge) => ({
+        from: edge.from,
+        to: edge.to,
+        strength: edge.strength,
+        advantage: edge.advantage_points,
+        source: edge.source,
+      })),
+      generated_at_utc: stored.payload.manifest?.generated_at_utc ?? null,
+    },
+    200,
+    request,
+    env,
+    {
+      'Cache-Control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=3600',
+    }
+  );
+}
+
+/**
  * Detail satu hero: skill, rating, base stats, matchup, dan item yang cocok.
  *
  *   GET /api/hero?id=alucard
@@ -540,15 +650,17 @@ async function handleGetHeroDetail(request: Request, env: Env): Promise<Response
 }
 
 async function handleManualRefresh(request: Request, env: Env): Promise<Response> {
-  if (!refreshAllowed(request, env)) {
+  const auth = authorizeRefresh(request, env);
+  if (!auth.ok) {
     return jsonResponse(
       {
-        error: 'unauthorized',
-        message: 'Invalid X-Refresh-Token',
+        error: auth.error,
+        message: auth.message,
       },
-      401,
+      auth.status,
       request,
-      env
+      env,
+      auth.status === 503 ? { 'Cache-Control': 'no-store' } : undefined
     );
   }
 
@@ -623,6 +735,14 @@ export default {
       return handleGetDeltas(request, env);
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/hero-trend') {
+      return handleGetHeroTrend(request, env);
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/counters') {
+      return handleGetCounters(request, env);
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/patch-notes') {
       return handleGetPatchNotes(request, env);
     }
@@ -633,6 +753,22 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/refresh') {
       return handleManualRefresh(request, env);
+    }
+
+    // Refresh hanya POST. GET dulu dibenarkan dan hanya dibaca, tapi
+    // ia sebenarnya menulis ke KV - jadi GET kini ditolak supaya tiada
+    // prefetch / crawler / <img src> boleh memaksa refresh.
+    if (url.pathname === '/api/refresh') {
+      return jsonResponse(
+        {
+          error: 'method_not_allowed',
+          message: 'Guna POST /api/refresh dengan Authorization: Bearer <REFRESH_API_TOKEN>.',
+        },
+        405,
+        request,
+        env,
+        { Allow: 'POST', 'Cache-Control': 'no-store' }
+      );
     }
 
     // Lagu hero: dihantar ke Worker dulu (run_worker_first) supaya boleh
@@ -653,9 +789,11 @@ export default {
           '/api/patch-notes',
           '/api/tournaments',
           '/api/hero',
+          '/api/hero-trend',
+          '/api/counters',
           '/api/snapshots',
           '/api/deltas',
-          '/api/refresh',
+          '/api/refresh (POST, Bearer)',
         ],
       },
       200,

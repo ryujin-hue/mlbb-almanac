@@ -7,7 +7,7 @@
  *
  * Desktop: panel dalam halaman. Mobile: page penuh.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 
 import {
   Delta,
@@ -17,11 +17,20 @@ import {
   Portrait,
   StateBlock,
   TierBadge,
+  UnverifiedTag,
 } from '../components/ui';
-import { API, fetchJson, type HeroDetailResponse } from '../data/client';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import {
+  API,
+  fetchJson,
+  type HeroDetailResponse,
+  type HeroTrendResponse,
+} from '../data/client';
 import { useAlmanac } from '../data/AlmanacContext';
 import type { ArchiveIndex } from '../data/archive';
 import { formatDateTime, formatPercent } from '../lib/format';
+import { normalizePatchHistory, normalizeTrend } from '../lib/heroTrend';
+import { isUnverified } from '@shared/heroKey';
 import { Link, navigate } from '../router';
 
 interface Props {
@@ -32,7 +41,20 @@ interface Props {
   reloadArchive?: () => void;
 }
 
-type Tab = 'overview' | 'balance';
+type Tab = 'overview' | 'balance' | 'correlation';
+
+/**
+ * Carta dimuat secara lazy.
+ *
+ * Recharts + d3 weighs in at ~450 KB - hanya hero detail page yang
+ * memerlukannya, jadi bundle utama tidak perlu membawanya. Chunk ini
+ * diambil bila tab "Patch vs meta" dibuka.
+ */
+const HeroMetaCorrelationChart = lazy(() =>
+  import('../components/HeroMetaCorrelationChart').then((module) => ({
+    default: module.HeroMetaCorrelationChart,
+  }))
+);
 
 interface DetailHero {
   id: string;
@@ -71,6 +93,9 @@ export function HeroDetailPage({
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
+  const [trend, setTrend] = useState<HeroTrendResponse | null>(null);
+  const [trendStatus, setTrendStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [trendError, setTrendError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -93,6 +118,29 @@ export function HeroDetailPage({
     return () => controller.abort();
   }, [heroId]);
 
+  // Siri tren live untuk carta patch-vs-meta.
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+    setTrendStatus('loading');
+    setTrendError(null);
+
+    fetchJson<HeroTrendResponse>(API.heroTrend(heroId), { signal: controller.signal })
+      .then((data) => {
+        if (cancelled) return;
+        setTrend(data);
+        setTrendStatus('ready');
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setTrendError(err instanceof Error ? err.message : String(err));
+        setTrendStatus('error');
+      });
+
+    return () => controller.abort();
+  }, [heroId]);
+
   const hero = detail?.hero as DetailHero | undefined;
   const live = heroes.find((h) => h.id === heroId) ?? null;
   const delta = deltas?.deltas.find((d) => d.id === heroId) ?? null;
@@ -108,6 +156,22 @@ export function HeroDetailPage({
     if (!archive || !hero) return null;
     return archive.heroByName.get((hero.name || heroId).toLowerCase()) ?? null;
   }, [archive, hero, heroId]);
+
+  // Data carta: tren live + peristiwa patch (dari arkib).
+  const trendPoints = useMemo(
+    () =>
+      normalizeTrend(
+        (trend?.points ?? []).map((point) => ({
+          date: point.date,
+          winRate: point.winRate,
+          pickRate: point.pickRate,
+          banRate: point.banRate,
+        }))
+      ),
+    [trend]
+  );
+
+  const chartPatches = useMemo(() => normalizePatchHistory(history), [history]);
 
   if (status === 'loading') {
     return (
@@ -178,6 +242,15 @@ export function HeroDetailPage({
         >
           Balance history
           {history.length > 0 ? <span className="tabs__count">{history.length}</span> : null}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'correlation'}
+          className={`tabs__btn${tab === 'correlation' ? ' tabs__btn--on' : ''}`}
+          onClick={() => setTab('correlation')}
+        >
+          Patch vs meta
         </button>
       </div>
 
@@ -309,7 +382,7 @@ export function HeroDetailPage({
             </section>
           ) : null}
         </div>
-      ) : (
+      ) : tab === 'balance' ? (
         <div className="detailbody">
           {archiveStatus === 'loading' ? (
             <StateBlock label="Memuat sejarah imbangan…" rows={2} />
@@ -344,7 +417,12 @@ export function HeroDetailPage({
                   <tbody>
                     {[...history].reverse().map((change, index) => (
                       <tr key={`${change.version}-${index}`}>
-                        <td className="muted">{change.date || '—'}</td>
+                        <td className="muted">
+                          {change.date || '—'}
+                          {isUnverified(change.date) || isUnverified(change.detail) ? (
+                            <UnverifiedTag />
+                          ) : null}
+                        </td>
                         <td>
                           <Link to={`/patches/${encodeURIComponent(change.version)}`} className="tbl__patch">
                             {change.version}
@@ -378,6 +456,43 @@ export function HeroDetailPage({
               </p>
             </section>
           )}
+        </div>
+      ) : (
+        <div className="detailbody">
+          <ErrorBoundary feature="Carta patch vs meta">
+            {trendStatus === 'loading' ? (
+              <StateBlock label="Memuat siri live…" rows={3} />
+            ) : trendStatus === 'error' ? (
+              <ErrorState
+                title="Data unavailable"
+                detail={trendError ?? 'Siri live tidak dapat dimuatkan.'}
+                onRetry={() => navigate(`/heroes/${heroId}`)}
+              />
+            ) : (
+              <Suspense
+                fallback={<StateBlock label="Memuat carta…" rows={3} />}
+              >
+                <HeroMetaCorrelationChart
+                  liveTrendData={trendPoints}
+                  patchHistory={chartPatches}
+                  heroName={name}
+                  portraitUrl={hero.icon_url ?? hero.portrait_url}
+                />
+              </Suspense>
+            )}
+          </ErrorBoundary>
+
+          <section className="panel">
+            <div className="panel__head">
+              <h2 className="panel__title">Apa yang dipaparkan</h2>
+            </div>
+            <p className="panel__foot" style={{ marginTop: 0 }}>
+              Garis menegak warna = peristiwa patch (hijau buff, merah nerf, kuning
+              adjustment/rework). Satu titik = satu hari dari snapshot KV. Baris
+              arkib tanpa tarikh tepat dilangkau - jumlahnya:{' '}
+              {history.length - chartPatches.length} daripada {history.length}.
+            </p>
+          </section>
         </div>
       )}
     </div>

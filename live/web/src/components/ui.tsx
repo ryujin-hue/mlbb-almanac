@@ -32,6 +32,24 @@ export function PatchTag({ type, count }: { type: string; count?: number }) {
   );
 }
 
+/**
+ * Tag UNVERIFIED.
+ *
+ * Arkib menanda nilai yang tidak dapat disahkan silang secara in-band.
+ * UI mesti tetap tunjukkannya - menyembunyikan tag itu sama seperti
+ * membebaskan pembaca daripada fakta yang tidak disahkan.
+ */
+export function UnverifiedTag({ label = 'UNVERIFIED' }: { label?: string }) {
+  return (
+    <span
+      className="unverified"
+      title="Nilai ini tidak dapat disahkan silang oleh sumber kedua."
+    >
+      {label}
+    </span>
+  );
+}
+
 // ------------------------------------------------------------------- delta
 
 /** Nilai bertanda dengan 1 desimal: "+3,4" / "-3,4". */

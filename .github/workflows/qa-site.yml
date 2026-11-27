@@ -49,10 +49,28 @@ jobs:
         working-directory: live/worker
         run: npm run typecheck
 
+      # --- pages functions ---
+      - name: Install pages dependencies
+        working-directory: live/pages
+        run: npm install --no-audit --no-fund
+
+      - name: Pages typecheck (proxy + penjana kad OG)
+        working-directory: live/pages
+        run: npm run typecheck
+
+      # --- unit test logik tulen (shared + pages) ---
+      - name: Unit test shared + pages (vitest)
+        working-directory: .
+        run: npm install --no-audit --no-fund && npm test
+
       # --- web ---
       - name: Install web dependencies
         working-directory: live/web
         run: npm install --no-audit --no-fund
+
+      - name: Unit test web (vitest + testing-library)
+        working-directory: live/web
+        run: npm test
 
       # Asset arkib dijana DULU daripada build: `npm run build` menyalin
       # web/public/ ke site/, jadi JSON arkib mesti wujud sebelum itu.
@@ -67,17 +85,25 @@ jobs:
       - name: Cek ukuran bundle
         working-directory: live
         run: |
-          # Bundle JS/CSS dikira TANPA aset kandungan - lagu hero ~4.8 MB dan
-          # imej arkib ~3.4 MB bukan bundle kod, jadi tidak ikut dikira sebagai
-          # "bundle kegedean".
-          total=$(du -sk --exclude=audio --exclude=archive site | cut -f1)
-          echo "site/ (tanpa audio, tanpa arkib): ${total} KB"
-          test "$total" -lt 1400 || { echo "Bundle kegedean (>1.4 MB)"; exit 1; }
+          # Bundle JS/CSS dikira TANPA aset kandungan:
+          #   audio  - lagu hero ~4.8 MB, bukan bundle kod
+          #   archive- arkib (3.7 MB JSON + imej), bukan bundle kod
+          #   og     - font DejaVu untuk kad OG, hanya diambil oleh
+          #             Pages Function, bukan oleh pelayar
+          # Recharts (carta korelasi) berada dalam chunk berasingan yang
+          # dimuat secara lazy - jadi bundle UTAMA kekal kecil, tetapi
+          # saiz site/ keseluruhan bertambah.
+          total=$(du -sk --exclude=audio --exclude=archive --exclude=og site | cut -f1)
+          echo "site/ (tanpa audio, arkib, og): ${total} KB"
+          test "$total" -lt 1900 || { echo "Bundle kegedean (>1.9 MB)"; exit 1; }
           if [ -d site/audio ]; then
             echo "site/audio/: $(du -sk site/audio | cut -f1) KB"
           fi
           if [ -d site/archive ]; then
             echo "site/archive/: $(du -sk site/archive | cut -f1) KB"
+          fi
+          if [ -d site/og ]; then
+            echo "site/og/: $(du -sk site/og | cut -f1) KB"
           fi
 
       - name: Cek aset lagu hero

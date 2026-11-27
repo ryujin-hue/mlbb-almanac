@@ -12,6 +12,34 @@
      5. halaman (meta, heroes, detail, movers, patches, items, data)
 */
 
+/* Tailwind v4 - hanya theme + utilities, TANPA preflight.
+
+   Preflight dihentikan supaya reset Tailwind tidak mengubah mana-mana
+   halaman sedia ada (margin, butang, jadual). Ciri baharu (carta korelasi,
+   draft simulator) guna utiliti Tailwind dengan token yang sama seperti
+   CSS biasa - jadi satu sistem warna, bukan dua. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --color-bg: #0b0f1a;
+  --color-surface: #121826;
+  --color-surface2: #1a2332;
+  --color-line: #243044;
+  --color-ink: #e8eef7;
+  --color-muted: #8b9bb4;
+  --color-live: #00e5ff;
+  --color-archive: #f5c518;
+  --color-rise: #34d399;
+  --color-fall: #f87171;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
 :root {
   --bg: #0b0f1a;
   --surface: #121826;
@@ -641,6 +669,20 @@ a:focus-visible {
 .ptag__count {
   opacity: .7;
 }
+/* Tag UNVERIFIED - nilai yang tidak dapat disahkan silang. */
+.unverified {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px dashed var(--archive);
+  border-radius: 4px;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: var(--archive);
+  white-space: nowrap;
+}
 .ptag[data-kind='NEW'] {
   background: color-mix(in srgb, var(--live) 20%, transparent);
   color: var(--live);
@@ -840,7 +882,7 @@ a:focus-visible {
   padding-bottom: 2px;
 }
 /* Anak tidak dikecilkan: barisuis meluncur mendatar pada skrin kecil
-   (label select完整) dan muat penuh pada skrin lebar. */
+   (label select) dan muat penuh pada skrin lebar. */
 .toolbar__scroll > * {
   flex: 0 0 auto;
 }

@@ -71,6 +71,26 @@ def main() -> int:
         len([h for h in heroes if h.get("tier")]) >= 130,
         f"{len([h for h in heroes if h.get('tier')])} hero",
     )
+    # Endpoint baharu: tren satu hero + matriks counter.
+    trend = get_json(f"{BASE}/api/hero-trend?id=alucard&limit=14")
+    points = trend.get("points") or []
+    ck("API /api/hero-trend 200", "available" in trend, f"{trend.get('count')} titik")
+    ck(
+        "API /api/hero-trend ada titik",
+        trend.get("available") is True and len(points) >= 1,
+        f"{len(points)} titik",
+    )
+    ck(
+        "API /api/hero-trend rate boleh null",
+        all(
+            p.get("winRate") is None or isinstance(p.get("winRate"), (int, float))
+            for p in points
+        ),
+    )
+    counters = get_json(f"{BASE}/api/counters")
+    edges = counters.get("edges") or []
+    ck("API /api/counters 200", counters.get("available") is True, f"{len(edges)} edge")
+
     summary = (index.get("manifest") or {}).get("rates_summary") or {}
     ck("rates_summary ada", summary.get("avg_win_rate") is not None, f"avg={summary.get('avg_win_rate')}")
     ck(
@@ -173,8 +193,21 @@ def main() -> int:
         )
         ck(
             "nav: Heroes dulu, Meta kemudian",
-            nav_links[:2] == ["Heroes", "Meta"] and len(nav_links) == 7,
+            nav_links[:2] == ["Heroes", "Meta"] and len(nav_links) == 8,
             str(nav_links),
+        )
+
+        # 1b. Draft Pick Simulator
+        body = load("/draft", wait=".pagehead__title")
+        ck("Draft: tajuk halaman", "Draft" in body)
+        ck("Draft: pool hero", len(page.query_selector_all(".grid button")) > 50)
+        ck(
+            "Draft: bar Lock Hero",
+            bool(page.query_selector("button:has-text('Lock Hero')")),
+        )
+        ck(
+            "Draft: dua lajur pasukan",
+            len(page.query_selector_all("section[aria-label*='Pasukan']")) == 2,
         )
 
         # 2. Meta (halaman ringkasan)
@@ -209,6 +242,30 @@ def main() -> int:
         page.click(".tabs__btn:has-text('Balance history')")
         page.wait_for_timeout(1000)
         ck("Detail hero: sejarah imbangan ada baris", len(page.query_selector_all(".tbl--history tbody tr")) >= 1)
+
+        # Tab "Patch vs meta" - carta korelasi. Carta dimuat secara lazy
+        # (chunk recharts), jadi tunggu butang siri muncul.
+        page.click(".tabs__btn:has-text('Patch vs meta')")
+        try:
+            page.wait_for_selector("button:has-text('Pick rate')", timeout=20000)
+        except Exception:
+            pass
+        page.wait_for_timeout(1200)
+        ck(
+            "Detail hero: tab Patch vs meta",
+            bool(page.query_selector(".recharts-wrapper, .recharts-surface"))
+            or "Belum ada siri live" in page.inner_text("body"),
+            "",
+        )
+        ck(
+            "Detail hero: kawalan siri carta",
+            len(page.query_selector_all("button:has-text('Win rate')")) == 1,
+        )
+
+        # Kad OG - hanya ada pada Pages (Pages Function), bukan pada Worker.
+        if "pages.dev" in BASE:
+            size, ctype = get_bytes(f"{BASE}/heroes/lancelot/og")
+            ck("OG: kad PNG 1200x630", ctype == "image/png" and size > 20_000, f"{size} B {ctype}")
 
         # 4. Movers (data sebenar di produksi)
         body = load("/movers", wait=".page--movers")

@@ -44,12 +44,29 @@ pelayar.
 | `GET /api/hero?id=<slug>` | detail satu hero |
 | `GET /api/snapshots` | senarai versi snapshot tersimpan |
 | `GET /api/deltas?window=7d&threshold=0.5` | perubahan tier/kadar antara dua snapshot |
+| `GET /api/hero-trend?id=<slug>&limit=14` | siri win/pick/ban satu hero merentas snapshot |
+| `GET /api/counters` | matriks counter ("from" menang lawan "to") |
 | `GET /api/patch-notes` | artikel patch notes MLBB Hub (dari sitemap awam) |
 | `GET /api/tournaments` | jadual sukan MLBB (PandaScore) |
-| `POST /api/refresh` | refresh manual (perlu token) |
+| `POST /api/refresh` | refresh manual - **Bearer `REFRESH_API_TOKEN`** |
+
+`POST /api/refresh` hanya boleh dipanggil dengan
+`Authorization: Bearer <REFRESH_API_TOKEN>`. Tanpa secret itu, endpoint
+ditutup (503) - refresh menulis ke KV, jadi ia mesti sentiasa proving.
+`GET /api/refresh` kini 405.
 
 Kunci KV: `mlbb:dataset:latest`, `mlbb:meta:latest`, `mlbb:snap:*`,
 `mlbb:patch-notes:v3:latest`, `mlbb:tournaments:latest`.
+
+## Carta & draf
+
+- **Carta patch vs meta** (tab ketiga detail hero): win/pick/ban merentas
+  masa dengan setiap patch yang menyentuh hero dilukis pada paksi yang
+  sama. Recharts dimuat secara lazy.
+- **Draft Pick Simulator** (`/draft`): 5 pick + 5 ban setiap pasukan,
+  empat fasa (Ban 1, Pick 1, Ban 2, Pick 2), amaran komposisi
+  (frontline, CC, nisbah damage) dan cadangan counter. Keadaan draf
+  duduk dalam URL, jadi pautan itu adalah draf.
 
 ## Cron dan snapshot
 

@@ -14,7 +14,7 @@
  *   mlbb:meta:latest     -> RuntimeMeta (tetap ada)
  *
  * Versi = timestamp snapshot terukur (ISO dengan ':' diganti '-'), jadi
- * urutannya天然 chronologis dan aman dipakai sebagai kunci KV.
+ * urutannya chronologis dan aman dipakai sebagai kunci KV.
  *
  * Retensi: `MAX_SNAPSHOTS` versi terakhir disimpan (default 45 ~= 45 hari).
  * Snapshot lama dibuang supaya KV tidak membengkak.

@@ -1,6 +1,7 @@
 import { AlmanacProvider, useAlmanac } from './data/AlmanacContext';
 import { BottomNav, TopNav } from './components/shell';
 import { DataPage } from './pages/DataPage';
+import { DraftPage } from './pages/DraftPage';
 import { HeroDetailPage } from './pages/HeroDetailPage';
 import { HeroesPage } from './pages/HeroesPage';
 import { ItemsPage } from './pages/ItemsPage';
@@ -100,6 +101,8 @@ function Routes({ path }: { path: string }) {
           reloadArchive={reloadArchive}
         />
       );
+    case 'draft':
+      return <DraftPage />;
     case 'data':
       return <DataPage />;
     case 'meta':

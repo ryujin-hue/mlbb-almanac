@@ -49,7 +49,12 @@ daily work, the meta summary is the reference.
 | `/patches/<version>` | One patch: what changed, per hero and per item, with the old value next to the new one, plus any MLBB Hub article on that version. |
 | `/patch-notes` **Patch Notes** | Patch notes written by MLBB Hub, linked to the archive version they cover. |
 | `/items` **Items** | The 104-item shop: category, gold cost, build path, unique passive, and the change log for each item. |
+| `/draft` **Draft** | A 5v5 draft simulator: 5 picks + 5 bans per team, four phases, live composition warnings, and counter suggestions. The draft lives in the URL, so a link is a draft. |
 | `/data` **Data** | Live dataset status and snapshot history, the archive (13 reference tables, 5 documents), and the API catalogue. |
+
+A hero's page has three tabs: **Overview**, **Balance history** (from the
+archive), and **Patch vs meta** — win/pick/ban over time with every patch
+that touched the hero marked on the same axis.
 
 Routing is by path, not by hash, so every page has its own URL. Filter state
 (rank, sort, search, role/lane/damage, card vs table) lives in the query
@@ -69,11 +74,11 @@ archive/            Patch history, heroes, items, references  (was mlbb-historic
 live/               Worker + web app  (was mlbb-data-workflow)
   web/              React + Vite - the site
   worker/           Cloudflare Worker: KV, 02:00 UTC cron, the API
-  pages/            Pages Functions - proxies /api/* and /audio/* to the Worker
+  pages/            Pages Functions - proxies /api/*, /audio/*, and the OG card
   tools/            dev-server.mjs (mock API), build_archive.py (archive -> JSON)
-  tests/            smoke_test_v2.py (88 checks), production_check.py (live probe)
+  tests/            smoke_test_v2.py (95 checks), production_check.py (78 checks)
 
-packages/shared/    Code shared by worker and web (tier maths, types)
+packages/shared/    Code shared by worker and web (tier maths, types, hero keys)
 docs/               Brand identity, architecture notes
 ```
 
@@ -111,20 +116,34 @@ cd .. && node --experimental-strip-types --import ./worker/tests/register-ts.mjs
 
 ```bash
 cd live
-python3 tests/smoke_test_v2.py                                        # 88 checks, browser
-QA_BASE=https://mlbb-almanac.pages.dev python3 tests/production_check.py   # 70 checks, live
+python3 tests/smoke_test_v2.py                                        # 95 checks, browser
+QA_BASE=https://mlbb-almanac.pages.dev python3 tests/production_check.py   # 78 checks, live
 cd ../archive && python3 -m pytest tests/ -q                           # archive suite
+
+cd live/web && npm test            # 60 checks - component + DOM (vitest)
+npm test                            # 34 checks - shared + pages (vitest, root)
+cd live/worker && npm test          # 25 checks - worker (node --test)
 ```
+
+Three test runners, each where it belongs: the browser tests drive a real
+Chromium, the web tests use jsdom, and the worker tests run on the edge
+runtime's own test harness.
 
 ## CI
 
 | Workflow | When | What |
 |---|---|---|
 | `auto-update` | cron 18:00 UTC | refresh the archive datasets, commit `[auto-update]` |
-| `QA Site` | every push | worker unit tests, typecheck, build, 88-check smoke test |
+| `QA Site` | every push | worker tests, web tests, shared/pages tests, typecheck, build, 95-check smoke test |
 | `QA Production` | cron 03:00 UTC | probe against both live URLs |
-| `Deploy Pages` | push | `live/` -> Cloudflare Pages |
+| `Deploy Pages` | push | `live/` -> Cloudflare Pages (functions + static assets) |
 | `Deploy Worker + Site` | push | `live/worker` -> Cloudflare Workers |
+
+Required secrets on the repository: `CLOUDFLARE_API_TOKEN`,
+`CLOUDFLARE_ACCOUNT_ID`, `PANDASCORE_API_TOKEN` (tournament data) and
+`REFRESH_API_TOKEN` (the manual refresh endpoint). The last one guards
+`POST /api/refresh`, which writes to KV - without it the endpoint stays
+closed (503) rather than open.
 
 Both Cloudflare deploys share one concurrency group (`cloudflare-deploy`) —
 two deploys at once trip the API rate limit (code 10429).
